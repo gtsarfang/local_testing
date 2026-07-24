@@ -193,14 +193,20 @@ problems, executed in a sandboxed subprocess via
 possible, same tuning approach (`-ncmoe` + KV cache individually tuned per
 model for safe VRAM headroom, per [Tuning](#tuning-ncmoe-and-kv-cache)).
 
-| Model | Total / Active | Size | `-ncmoe` | VRAM free | pp512 | tg128 | Perplexity | HumanEval |
-|---|---|---|---|---|---|---|---|---|
-| **Qwen3-Coder-30B-A3B (default)** | 30.5B / 3.3B | 17.7GB | 27 | 1161MB | **456.77 ± 37.24** | **31.87 ± 1.73** | 8.8606 ± 0.237 | 39/40 |
-| [Qwen3-Coder-Next](https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF) | 80B / 3B | 49.6GB | 41 | 863MB | 74.45 ± 23.85 | 22.12 ± 0.59 | **6.6825 ± 0.172** | 39/40 |
+| Model | Total / Active | Size | `-ncmoe` | VRAM free | pp512 | tg128 | Perplexity | HumanEval | Time (40 problems) |
+|---|---|---|---|---|---|---|---|---|---|
+| **Qwen3-Coder-30B-A3B (default)** | 30.5B / 3.3B | 17.7GB | 27 | 1161MB | 456.77 ± 37.24 | 31.87 ± 1.73 | 8.8606 ± 0.237 | 39/40 | **228.9s** |
+| [Qwen3-Coder-Next](https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF) | 80B / 3B | 49.6GB | 41 | 863MB | 74.45 ± 23.85 | 22.12 ± 0.59 | **6.6825 ± 0.172** | 39/40 | 463.5s |
+| [gpt-oss-20b](https://huggingface.co/unsloth/gpt-oss-20b-GGUF) | 21B / 3.6B | 11.9GB | 4 | 1343MB | **1393.10 ± 70.51** | **71.43 ± 0.31** | not comparable* | 39/40 | 353.5s |
+
+*perplexity for gpt-oss-20b is a known-broken measurement for this model
+family, not a real quality number — see
+[Known issues](#known-issues).
 
 **Which one do I use:**
 - Fast iterative loop, most day-to-day tasks → **Qwen3-Coder-30B-A3B** (the default)
 - A problem hard enough that quality matters more than turnaround time → **Qwen3-Coder-Next**
+- Raw tok/s matters more than wall-clock time-to-answer (e.g. batch/background work) → **gpt-oss-20b** — but see the reasoning-model caveat below before picking it for interactive use
 
 ### Findings
 
@@ -249,6 +255,19 @@ pp512 and tg128 separately, they can diverge sharply for models of very
 different total size, and pick whichever one matches your actual workload
 (agentic/context-heavy vs. short back-and-forth).
 
+**Raw tok/s isn't wall-clock time, if the model reasons before answering.**
+gpt-oss-20b posted the fastest tok/s of any model here by a wide margin
+(1393 pp512, 71 tg128 — roughly 3x the default's numbers) but took **1.54x
+longer than the default** to actually finish the same 40 HumanEval
+problems (353.5s vs. 228.9s). It's a reasoning model: llama.cpp surfaces
+its chain-of-thought in a separate `reasoning_content` field, and it can
+spend a large number of tokens thinking before it ever writes the answer
+— on one problem it took 54.5 seconds despite generating at 71 tok/s the
+whole time, because most of that time was spent reasoning, not answering.
+**Lesson:** tok/s tells you how fast the model can generate, not how long
+you'll actually wait for a finished answer — those are the same thing for
+a non-reasoning model and can diverge a lot for one that isn't.
+
 ### HumanEval methodology
 
 ```bash
@@ -260,18 +279,42 @@ Sends real HumanEval problems (bundled as
 [`HumanEval.jsonl.gz`](./HumanEval.jsonl.gz), 164 official problems) to a
 running server, extracts the generated function, executes it against
 HumanEval's actual unit tests in a sandboxed subprocess, `pass@1` at
-temperature 0 for determinism. 40 problems tested per model here (0-19,
-then 140-159 — the second slice specifically to check whether an "easy"
-subset was hiding a real gap; it wasn't, see Findings above).
+temperature 0 for determinism. 40 problems tested per model (0-19, then
+140-159 — the second slice specifically to check whether an "easy" subset
+was hiding a real gap; it wasn't):
 
-Two real harness bugs got caught and fixed while building this: extracted
-code needs the original prompt's import preamble prepended before
-execution (a model completing just the function body doesn't repeat `from
-typing import List`), and the temp file needs explicit UTF-8 encoding on
-Windows or certain generated characters break execution with an
-unrelated-looking `SyntaxError`. Both looked like model failures at first
-and were actually harness bugs — worth being suspicious of your own eval
-code before concluding the model failed.
+| Model | Problems 0-19 | Problems 140-159 | Total |
+|---|---|---|---|
+| Qwen3-Coder-30B-A3B (default) | 20/20 | 19/20 | **39/40 (97.5%)** |
+| Qwen3-Coder-Next | 20/20 | 19/20 | **39/40 (97.5%)** |
+| gpt-oss-20b | 20/20 | 19/20 | **39/40 (97.5%)** |
+
+All three, identical — down to failing the same single problem
+(`HumanEval/145`). Three different vendors/architectures converging on the
+exact same result is much stronger evidence that this specific problem's
+spec is genuinely ambiguous than any one model's failure would be on its
+own.
+
+Three real harness bugs got caught and fixed while building this — all
+worth knowing before trusting any pass@1 number you didn't verify by hand:
+
+1. Extracted code needs the original prompt's import preamble prepended
+   before execution (a model completing just the function body doesn't
+   repeat `from typing import List`).
+2. The temp file needs explicit UTF-8 encoding on Windows, or certain
+   generated characters break execution with an unrelated-looking
+   `SyntaxError`.
+3. **Reasoning models need a much larger token budget.** gpt-oss-20b
+   initially scored 17/20 with `max_tokens=512` — not because it got
+   problems wrong, but because `finish_reason: "length"` hit while it was
+   still mid-reasoning in `reasoning_content`, leaving `content` (the
+   actual answer field) empty. Raised the budget to 4096 and it went to
+   20/20. A model that appears to fail by returning nothing may just be a
+   model that wasn't given room to finish thinking.
+
+All three looked like model failures at first and were actually harness
+bugs — worth being suspicious of your own eval code before concluding the
+model failed.
 
 ## Tuning: `-ncmoe` and KV cache
 
@@ -441,6 +484,30 @@ request without anything being wrong.
 
 </details>
 
+<details>
+<summary><b>gpt-oss-20b perplexity is ~20x worse than everything else here</b> — and it's not a real quality signal</summary>
+
+`llama-perplexity` reported PPL 160 for gpt-oss-20b, versus 6.68-8.86 for
+every other model tested — an implausibly large gap for a model that
+otherwise generates coherent, correct text (it scored 39/40 on HumanEval,
+identical to everything else). This is a known, documented issue, not a
+bug in this repo's setup: see
+[ggml-org/llama.cpp#15155](https://github.com/ggml-org/llama.cpp/issues/15155)
+(~195 PPL reported independently) and a parallel
+[huggingface/transformers issue](https://github.com/huggingface/transformers/issues/40990)
+(~394 PPL). The likely cause: gpt-oss was trained so heavily around its
+special "harmony" chat/reasoning format that raw next-token prediction on
+plain prose (no chat formatting, which is what a standard perplexity test
+does) is genuinely miscalibrated for this model family, even though it
+behaves completely normally through its actual chat interface.
+
+**Lesson:** perplexity is only a valid quality proxy for models evaluated
+the way they were trained to be used. Before trusting a wildly outlying
+number, check whether the model has documented quirks with the specific
+evaluation method — don't just report the number.
+
+</details>
+
 ## Troubleshooting quick reference
 
 | Symptom | Cause | Fix |
@@ -457,7 +524,8 @@ request without anything being wrong.
 |---|---|
 | [`start-qwen-coder.ps1`](./start-qwen-coder.ps1) | launch script, Qwen3-Coder-30B-A3B (default, fast) |
 | [`start-qwen-coder-next.ps1`](./start-qwen-coder-next.ps1) | launch script, Qwen3-Coder-Next (slower, smarter) |
-| [`opencode.example.jsonc`](./opencode.example.jsonc) | opencode provider config to copy in, both models |
+| [`start-gpt-oss-20b.ps1`](./start-gpt-oss-20b.ps1) | launch script, gpt-oss-20b (fastest tok/s, reasoning model) |
+| [`opencode.example.jsonc`](./opencode.example.jsonc) | opencode provider config to copy in, all three models |
 | [`bench.py`](./bench.py) | quick HTTP-based tok/s benchmark against a running server |
 | [`humaneval_bench.py`](./humaneval_bench.py) | pass@1 code-correctness eval against a running server |
 | [`HumanEval.jsonl.gz`](./HumanEval.jsonl.gz) | official HumanEval dataset (164 problems), bundled for reproducibility |

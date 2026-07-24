@@ -27,7 +27,7 @@ def load_problems(n, offset=0):
     return lines[offset:offset + n]
 
 
-def query(prompt, max_tokens=512):
+def query(prompt, max_tokens=4096):
     payload = json.dumps({
         "messages": [
             {"role": "system", "content": SYSTEM},
