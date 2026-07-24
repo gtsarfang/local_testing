@@ -1,14 +1,16 @@
-# Qwen3-Coder-30B-A3B, locally, on a 12GB GPU
+# Local coding LLMs on a 12GB GPU
 
-A local coding LLM wired into [opencode](https://opencode.ai) via
-[llama.cpp](https://github.com/ggml-org/llama.cpp) — 30B total parameters
-running entirely on consumer hardware, no cloud API involved.
+Setting up and comparing local coding models on constrained consumer
+hardware, wired into [opencode](https://opencode.ai) via
+[llama.cpp](https://github.com/ggml-org/llama.cpp) — no cloud API involved.
+Default is [Qwen3-Coder-30B-A3B](#quick-start); see
+[Model comparison](#model-comparison) for the full lineup and how they
+stack up against it.
 
 **Contents:** [Overview](#overview) · [Hardware](#hardware) ·
 [Quick start](#quick-start) · [Configuration reference](#configuration-reference) ·
 [Benchmarks](#benchmarks) · [Quant comparison](#quant-comparison-intelligence-vs-speed) ·
-[Model comparison](#model-comparison-qwen3-coder-30b-a3b-vs-qwen3-coder-next) ·
-[Code correctness: HumanEval](#code-correctness-humaneval) ·
+[Model comparison](#model-comparison) ·
 [Tuning](#tuning-ncmoe-and-kv-cache) ·
 [Getting real numbers](#getting-real-numbers-llama-bench--llama-perplexity) ·
 [Known issues](#known-issues) ·
@@ -180,98 +182,85 @@ hardware showing it sits at the knee of the curve. Q5 is worth it if
 quality matters more than interactivity for a given task; Q3 is worth it if
 you want the fastest possible loop and can tolerate a small quality drop.
 
-## Model comparison: Qwen3-Coder-30B-A3B vs. Qwen3-Coder-Next
+## Model comparison
 
-Same `UD-Q4_K_XL` quant tier, same tuning methodology, two different base
-models. [Qwen3-Coder-Next](https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF)
-(80B total, still only 3B active) claims 70.6% on SWE-bench Verified versus
-this baseline's ~50%. Worth checking whether that translates into something
-usable on this hardware, not just a leaderboard number:
+Every model here is measured the same three ways: **speed** (`llama-bench`
+pp512/tg128), **quality** (perplexity on wikitext-2-raw), and
+**correctness** (`pass@1` on 40 real [HumanEval](https://github.com/openai/human-eval)
+problems, executed in a sandboxed subprocess via
+[`humaneval_bench.py`](./humaneval_bench.py) — see
+[methodology](#humaneval-methodology) below). Same quant tier where
+possible, same tuning approach (`-ncmoe` + KV cache individually tuned per
+model for safe VRAM headroom, per [Tuning](#tuning-ncmoe-and-kv-cache)).
 
-| Model | Total / Active | Size | `-ncmoe` | VRAM free | pp512 | tg128 | Perplexity |
-|---|---|---|---|---|---|---|---|
-| **Qwen3-Coder-30B-A3B (default)** | 30.5B / 3.3B | 17.7GB | 27 | 1161MB | **456.77 ± 37.24** | **31.87 ± 1.73** | 8.8606 ± 0.237 |
-| Qwen3-Coder-Next | 80B / 3B | 49.6GB | 41 | 863MB | 74.45 ± 23.85 | 22.12 ± 0.59 | **6.6825 ± 0.172** |
+| Model | Total / Active | Size | `-ncmoe` | VRAM free | pp512 | tg128 | Perplexity | HumanEval |
+|---|---|---|---|---|---|---|---|---|
+| **Qwen3-Coder-30B-A3B (default)** | 30.5B / 3.3B | 17.7GB | 27 | 1161MB | **456.77 ± 37.24** | **31.87 ± 1.73** | 8.8606 ± 0.237 | 39/40 |
+| [Qwen3-Coder-Next](https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF) | 80B / 3B | 49.6GB | 41 | 863MB | 74.45 ± 23.85 | 22.12 ± 0.59 | **6.6825 ± 0.172** | 39/40 |
 
-The quality gap is real, not just a paper claim — PPL 6.68 vs. 8.86 is a
-large, unambiguous improvement, consistent with the SWE-bench delta. But
-it isn't free, and the cost shows up somewhere non-obvious: **generation
-speed only drops ~31% (32 → 22 tok/s), but prompt processing drops ~6x**
+**Which one do I use:**
+- Fast iterative loop, most day-to-day tasks → **Qwen3-Coder-30B-A3B** (the default)
+- A problem hard enough that quality matters more than turnaround time → **Qwen3-Coder-Next**
+
+### Findings
+
+**The quality gap is real but selective.** Qwen3-Coder-Next claims 70.6% on
+SWE-bench Verified versus this baseline's ~50%, and perplexity backs that
+up (6.68 vs. 8.86 — a large, unambiguous gap). But HumanEval shows the
+*exact same* pass rate for both (39/40, both failing the identical single
+problem — `HumanEval/145`, a digit-sum-sorting task with a genuinely
+ambiguous sign convention, not a random miss). The gap doesn't show up on
+isolated, well-specified, single-function tasks — both models are already
+saturated there. That's consistent with what each benchmark actually
+measures: SWE-bench is repo-scale, ambiguous, multi-file, real-world bug
+fixing; HumanEval is a clean function signature and docstring. The
+capability gap between these two models lives in the harder, more
+open-ended, more context-heavy end of coding — not in "can it implement a
+clearly-specified function."
+
+**The speed cost lands somewhere non-obvious.** Generation speed only
+drops ~31% (32 → 22 tok/s) going to Next, but prompt processing drops ~6x
 (457 → 74 tok/s). Both models activate roughly the same ~3B params per
-token, so token-by-token generation cost stays close. Prompt processing is
-different — it touches the full CPU-resident expert set across the whole
+token, so token-by-token generation cost stays close — but prompt
+processing touches the *full* CPU-resident expert set across the whole
 batch, and Next has far more of its 49.6GB sitting in system RAM at any
-given offload setting than the 30B model's 17.7GB does. More weight moving
-through RAM per prompt means prompt processing takes the brunt of the
-slowdown, generation barely notices.
+given offload setting than the 30B model's 17.7GB does. That matters
+specifically for opencode: agentic coding sends large, repeated context
+(file contents, tool output, diffs) every turn — a prompt-processing-heavy
+workload, not a generation-heavy one — so a 6x prompt-processing
+regression is felt far more than the tg128 number alone suggests. On a
+long (~5800-token) stress prompt Next's own throughput improves to ~179
+tok/s (batching amortizes the RAM transfer better over a longer prompt),
+but that's still ~9.6x slower than the 30B model's ~1712 tok/s on the same
+prompt — batching helps Next's own efficiency, it doesn't close the gap to
+the smaller model. **Lesson for comparing any future model here:** check
+pp512 and tg128 separately, they can diverge sharply for models of very
+different total size, and pick whichever one matches your actual workload
+(agentic/context-heavy vs. short back-and-forth).
 
-That distinction matters specifically for opencode: agentic coding sends
-large, repeated context (file contents, tool output, diffs) on every turn,
-which is a prompt-processing-heavy workload, not a generation-heavy one. A
-6x prompt-processing regression will be felt on every turn of a real
-session far more than the tg128 number alone suggests. On a long
-(~5800-token) stress prompt, Next's own throughput improves to ~179 tok/s
-(batching amortizes the RAM transfer better over a longer prompt) but is
-still ~9.6x slower than the 30B model's ~1712 tok/s on the same prompt —
-batching helps Next's own efficiency, it doesn't close the gap.
-
-**Verdict:** not a clean win, a real tradeoff. Qwen3-Coder-30B-A3B stays
-the default for fast iterative loops. Qwen3-Coder-Next is worth switching
-to per-task when a problem is hard enough that the quality gap matters more
-than turnaround time — not as a wholesale replacement. See
-[Code correctness](#code-correctness-humaneval) below for where that gap
-actually does and doesn't show up.
-
-## Code correctness: HumanEval
-
-Perplexity and SWE-bench are useful, but neither is "does this model write
-code that actually runs and passes its tests." Neither is opencode
-tool-calling — that proves the *plumbing* works, not that the *code* is
-correct. [`humaneval_bench.py`](./humaneval_bench.py) closes that gap: it
-sends real [HumanEval](https://github.com/openai/human-eval) problems
-(bundled here as [`HumanEval.jsonl.gz`](./HumanEval.jsonl.gz), 164 official
-problems) to a running server, extracts the generated function, and
-executes it against HumanEval's actual unit tests in a sandboxed subprocess
-— `pass@1`, temperature 0 for determinism.
+### HumanEval methodology
 
 ```bash
 python humaneval_bench.py        # first 20 problems
 python humaneval_bench.py 140    # 20 problems starting at index 140
 ```
 
-Tested 40 problems total per model (problems 0-19, then 140-159 — the
-second slice specifically to check whether an "easy" subset was hiding a
-real gap):
+Sends real HumanEval problems (bundled as
+[`HumanEval.jsonl.gz`](./HumanEval.jsonl.gz), 164 official problems) to a
+running server, extracts the generated function, executes it against
+HumanEval's actual unit tests in a sandboxed subprocess, `pass@1` at
+temperature 0 for determinism. 40 problems tested per model here (0-19,
+then 140-159 — the second slice specifically to check whether an "easy"
+subset was hiding a real gap; it wasn't, see Findings above).
 
-| Model | Problems 0-19 | Problems 140-159 | Total |
-|---|---|---|---|
-| Qwen3-Coder-30B-A3B (default) | 20/20 | 19/20 | **39/40 (97.5%)** |
-| Qwen3-Coder-Next | 20/20 | 19/20 | **39/40 (97.5%)** |
-
-Identical. Both models failed the exact same single problem
-(`HumanEval/145`, a digit-sum sorting task with a genuinely ambiguous sign
-convention in its spec — a known-tricky problem, not a random miss).
-
-**This is the actual finding, and it matters:** the quality gap that shows
-up clearly in perplexity (6.68 vs. 8.86) and is claimed on SWE-bench (70.6%
-vs. ~50%) does *not* show up on isolated, well-specified, single-function
-coding tasks — both models are already saturated there. That's consistent
-with what SWE-bench actually measures versus what HumanEval measures:
-SWE-bench is repo-scale, ambiguous, multi-file, real-world bug fixing;
-HumanEval is a clean function signature and docstring. The gap between
-these two models is real, but it lives in the harder, more open-ended,
-more context-heavy end of coding tasks — not in "can it implement a
-clearly-specified function," which the faster/cheaper model already
-handles just as well.
-
-Two real harness bugs got caught and fixed during this: extracted code
-needs the original prompt's import preamble prepended before execution (a
-model completing just the function body doesn't repeat `from typing import
-List`), and the temp file needs explicit UTF-8 encoding on Windows or
-certain generated characters break execution with an unrelated-looking
-`SyntaxError`. Both looked like model failures at first and were actually
-harness bugs — worth being suspicious of your own eval code before
-concluding the model failed.
+Two real harness bugs got caught and fixed while building this: extracted
+code needs the original prompt's import preamble prepended before
+execution (a model completing just the function body doesn't repeat `from
+typing import List`), and the temp file needs explicit UTF-8 encoding on
+Windows or certain generated characters break execution with an
+unrelated-looking `SyntaxError`. Both looked like model failures at first
+and were actually harness bugs — worth being suspicious of your own eval
+code before concluding the model failed.
 
 ## Tuning: `-ncmoe` and KV cache
 
