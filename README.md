@@ -147,6 +147,28 @@ Reproduce with `python bench.py` against a running server for a quick,
 noisier read, or `llama-bench.exe` for the rigorous version (command in
 [Getting real numbers](#getting-real-numbers-llama-bench--llama-perplexity)).
 
+## Quant comparison: intelligence vs. speed
+
+Same methodology, three [Unsloth Dynamic](https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF)
+quants, each with `-ncmoe` independently tuned for safe VRAM headroom
+(KV cache q8_0 throughout — see [Tuning](#tuning-ncmoe-and-kv-cache) for
+what "safe" means here):
+
+| Quant | Size | `-ncmoe` | VRAM free | pp512 | tg128 | Perplexity (lower = better) |
+|---|---|---|---|---|---|---|
+| `UD-Q3_K_XL` | 13.8GB | 24 | 1739MB | 548.07 ± 37.49 | 33.12 ± 3.35 | 8.9187 ± 0.237 |
+| **`UD-Q4_K_XL` (default)** | **17.7GB** | **27** | **1161MB** | **456.77 ± 37.24** | **31.87 ± 1.73** | **8.8606 ± 0.237** |
+| `UD-Q5_K_XL` | 21.7GB | 32 | 1011MB | 248.78 ± 27.39 | 20.52 ± 1.73 | 8.7457 ± 0.233 |
+
+The curve isn't linear. Q3 → Q4 costs a small amount of speed (33.1 → 31.9
+tok/s gen) for a real quality gain. Q4 → Q5 costs a *much* bigger speed hit
+(31.9 → 20.5 tok/s gen, ~36% slower) for a similar-sized quality gain — the
+returns drop off past Q4. That's the actual reason Q4 is the default here:
+not just Unsloth's own recommendation, but a real head-to-head on this
+hardware showing it sits at the knee of the curve. Q5 is worth it if
+quality matters more than interactivity for a given task; Q3 is worth it if
+you want the fastest possible loop and can tolerate a small quality drop.
+
 ## Tuning: `-ncmoe` and KV cache
 
 Tuning is empirical — pick values, load the model, check headroom under
