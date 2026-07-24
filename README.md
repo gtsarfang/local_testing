@@ -4,6 +4,17 @@ A local coding LLM wired into [opencode](https://opencode.ai) via
 [llama.cpp](https://github.com/ggml-org/llama.cpp) — 30B total parameters
 running entirely on consumer hardware, no cloud API involved.
 
+**Contents:** [Overview](#overview) · [Hardware](#hardware) ·
+[Quick start](#quick-start) · [Configuration reference](#configuration-reference) ·
+[Benchmarks](#benchmarks) · [Quant comparison](#quant-comparison-intelligence-vs-speed) ·
+[Model comparison](#model-comparison-qwen3-coder-30b-a3b-vs-qwen3-coder-next) ·
+[Code correctness: HumanEval](#code-correctness-humaneval) ·
+[Tuning](#tuning-ncmoe-and-kv-cache) ·
+[Getting real numbers](#getting-real-numbers-llama-bench--llama-perplexity) ·
+[Known issues](#known-issues) ·
+[Troubleshooting](#troubleshooting-quick-reference) ·
+[Files in this repo](#files-in-this-repo)
+
 ## Overview
 
 [Qwen3-Coder-30B-A3B-Instruct](https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF)
@@ -207,7 +218,60 @@ batching helps Next's own efficiency, it doesn't close the gap.
 **Verdict:** not a clean win, a real tradeoff. Qwen3-Coder-30B-A3B stays
 the default for fast iterative loops. Qwen3-Coder-Next is worth switching
 to per-task when a problem is hard enough that the quality gap matters more
-than turnaround time — not as a wholesale replacement.
+than turnaround time — not as a wholesale replacement. See
+[Code correctness](#code-correctness-humaneval) below for where that gap
+actually does and doesn't show up.
+
+## Code correctness: HumanEval
+
+Perplexity and SWE-bench are useful, but neither is "does this model write
+code that actually runs and passes its tests." Neither is opencode
+tool-calling — that proves the *plumbing* works, not that the *code* is
+correct. [`humaneval_bench.py`](./humaneval_bench.py) closes that gap: it
+sends real [HumanEval](https://github.com/openai/human-eval) problems
+(bundled here as [`HumanEval.jsonl.gz`](./HumanEval.jsonl.gz), 164 official
+problems) to a running server, extracts the generated function, and
+executes it against HumanEval's actual unit tests in a sandboxed subprocess
+— `pass@1`, temperature 0 for determinism.
+
+```bash
+python humaneval_bench.py        # first 20 problems
+python humaneval_bench.py 140    # 20 problems starting at index 140
+```
+
+Tested 40 problems total per model (problems 0-19, then 140-159 — the
+second slice specifically to check whether an "easy" subset was hiding a
+real gap):
+
+| Model | Problems 0-19 | Problems 140-159 | Total |
+|---|---|---|---|
+| Qwen3-Coder-30B-A3B (default) | 20/20 | 19/20 | **39/40 (97.5%)** |
+| Qwen3-Coder-Next | 20/20 | 19/20 | **39/40 (97.5%)** |
+
+Identical. Both models failed the exact same single problem
+(`HumanEval/145`, a digit-sum sorting task with a genuinely ambiguous sign
+convention in its spec — a known-tricky problem, not a random miss).
+
+**This is the actual finding, and it matters:** the quality gap that shows
+up clearly in perplexity (6.68 vs. 8.86) and is claimed on SWE-bench (70.6%
+vs. ~50%) does *not* show up on isolated, well-specified, single-function
+coding tasks — both models are already saturated there. That's consistent
+with what SWE-bench actually measures versus what HumanEval measures:
+SWE-bench is repo-scale, ambiguous, multi-file, real-world bug fixing;
+HumanEval is a clean function signature and docstring. The gap between
+these two models is real, but it lives in the harder, more open-ended,
+more context-heavy end of coding tasks — not in "can it implement a
+clearly-specified function," which the faster/cheaper model already
+handles just as well.
+
+Two real harness bugs got caught and fixed during this: extracted code
+needs the original prompt's import preamble prepended before execution (a
+model completing just the function body doesn't repeat `from typing import
+List`), and the temp file needs explicit UTF-8 encoding on Windows or
+certain generated characters break execution with an unrelated-looking
+`SyntaxError`. Both looked like model failures at first and were actually
+harness bugs — worth being suspicious of your own eval code before
+concluding the model failed.
 
 ## Tuning: `-ncmoe` and KV cache
 
@@ -395,3 +459,5 @@ request without anything being wrong.
 | [`start-qwen-coder-next.ps1`](./start-qwen-coder-next.ps1) | launch script, Qwen3-Coder-Next (slower, smarter) |
 | [`opencode.example.jsonc`](./opencode.example.jsonc) | opencode provider config to copy in, both models |
 | [`bench.py`](./bench.py) | quick HTTP-based tok/s benchmark against a running server |
+| [`humaneval_bench.py`](./humaneval_bench.py) | pass@1 code-correctness eval against a running server |
+| [`HumanEval.jsonl.gz`](./HumanEval.jsonl.gz) | official HumanEval dataset (164 problems), bundled for reproducibility |
