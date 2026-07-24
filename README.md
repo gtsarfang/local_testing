@@ -135,8 +135,6 @@ instead, which is arguably easier to debug than a silent hang.)
 Going from `-ncmoe 30` to `-ncmoe 34` bought ~1.2GB more headroom (643MB →
 1805MB free) at the cost of ~20% generation speed (27.1 → 21.6 tok/s) — a
 real, measurable tradeoff, not just "more offload = worse" in a vague sense.
-`-ncmoe 30` is the config actually in use here: enough headroom to be
-reliable, without giving up speed for margin that isn't needed.
 
 Also verified stable with a ~4800-token prompt at `-ncmoe 30`: VRAM barely
 moved, because the KV cache is pre-allocated at server startup for the full
@@ -146,7 +144,42 @@ setup.
 **Takeaway:** don't just check idle VRAM after model load and call it
 tuned — test with an actual generation request, and give yourself more
 headroom than looks strictly necessary. "It loaded fine" is not the same as
-"it will actually respond."
+"it will actually respond." `-ncmoe 30` shipped as the first working config
+— but see below, it wasn't the final one.
+
+## Step 4b — Quantized KV cache: a free win that changed the answer
+
+`-ncmoe` isn't the only lever. The KV cache itself defaults to `f16`, and
+`-ctk q8_0 -ctv q8_0` quantizes it to 8-bit — roughly halving its VRAM
+footprint. Tried this at `-ncmoe 30` expecting a speed/quality tradeoff and
+got neither: it was **faster and freed more VRAM**, not a tradeoff at all.
+
+| config | VRAM free (idle) | prompt tok/s | gen tok/s |
+|---|---|---|---|
+| `-ncmoe 30`, KV f16 (original) | 643MB | 1034 | 27.1 |
+| `-ncmoe 30`, KV q8_0 | **1518MB** | 1190 | 29.1 |
+
+With that much headroom back, `-ncmoe` could drop again — this time landing
+somewhere genuinely fast *and* safely clear of the hang zone found earlier
+(anything under ~500MB free is the danger zone; this isn't):
+
+| config | VRAM free (idle) | prompt tok/s | gen tok/s |
+|---|---|---|---|
+| `-ncmoe 24`, KV q8_0 | 210MB | 1320 | 33.4 |
+| **`-ncmoe 27`, KV q8_0** | **1161MB** | **1291** | **31.5** |
+
+`-ncmoe 24` technically completed a benchmark run, but 210MB free is the
+same range that silently hung earlier in this doc — one successful run
+isn't proof of stability, it's a coin flip that happened to land right.
+`-ncmoe 27` is the one that's actually trustworthy: re-verified with the
+same ~4800-token stress prompt, VRAM held steady, response in under 4
+seconds. **This is the config now in use** — faster than every earlier
+attempt, including the original `-ncmoe 30`/f16 baseline, with nearly
+double its headroom.
+
+**Takeaway:** don't just tune one lever. KV cache quantization and MoE
+offload interact — freeing memory on one axis buys room to push the other
+further, and the combined optimum wasn't reachable by tuning `-ncmoe` alone.
 
 ## Step 5 — Launch command
 
@@ -163,8 +196,9 @@ Equivalent to:
 llama-server.exe `
   -m Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf `
   --host 127.0.0.1 --port 8080 `
-  -ngl 999 -ncmoe 30 `
+  -ngl 999 -ncmoe 27 `
   -c 32768 -fa on `
+  -ctk q8_0 -ctv q8_0 `
   --no-mmap `
   --jinja `
   -np 1
@@ -232,16 +266,72 @@ self-correcting — not just a single tool call.
 ## Reproducing the benchmark
 
 With the server running, [`bench.py`](./bench.py) reports prompt-processing
-and generation tok/s using the server's own timing data:
+and generation tok/s using the server's own timing data — quick, but noisy
+(HTTP overhead, no warmup, small sample):
 
 ```bash
 python bench.py
-# {"prompt_tok_per_sec": 1033.6, "gen_tok_per_sec": 27.1}
+# {"prompt_tok_per_sec": 1291.0, "gen_tok_per_sec": 31.5}
 ```
 
-Useful for comparing `-ncmoe` values on your own hardware — just restart the
-server with a different value between runs, and give it a few seconds after
-process exit for VRAM to actually release before launching the next one.
+Useful for comparing configs on your own hardware — just restart the server
+with different flags between runs, and give it a few seconds after process
+exit for VRAM to actually release before launching the next one.
+
+## Getting real numbers: `llama-bench` and `llama-perplexity`
+
+The Unsloth-installed build only shipped `llama-server.exe` — the
+`llama-bench` and `llama-perplexity` tools existed as internal `-impl.dll`
+files but had no matching `.exe` wrapper. Rather than setting up a whole
+build toolchain (no `cmake` was even installed on this machine), the fix was
+simpler: `UNSLOTH_PREBUILT_INFO.json` in the llama.cpp source tree records
+exactly which upstream release this build came from
+(`unslothai/llama.cpp`, tag `b10069-mix-fb3d4ca`). Downloading that same
+release's zip from GitHub and pulling `llama-bench.exe` /
+`llama-perplexity.exe` out of it gives tools that are guaranteed
+DLL/ABI-compatible with the CUDA backend already installed — no build
+required, no version mismatch risk.
+
+`llama-bench` runs the standard `pp512`/`tg128` test (512-token prompt
+processing, 128-token generation, 3+ repetitions with warmup) — the same
+methodology used across the llama.cpp community, so these numbers are
+directly comparable to numbers other people post for other hardware:
+
+```bash
+llama-bench.exe -m Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf -ngl 999 -ncmoe 27 -fa on -ctk q8_0 -ctv q8_0
+```
+
+| config | pp512 (tok/s) | tg128 (tok/s) |
+|---|---|---|
+| `-ncmoe 30`, KV f16 | 366.18 ± 14.60 | 28.09 ± 0.99 |
+| `-ncmoe 34`, KV f16 | 340.17 ± 25.09 | 26.18 ± 1.54 |
+| `-ncmoe 30`, KV q8_0 | 409.67 ± 21.45 | 29.18 ± 1.30 |
+| **`-ncmoe 27`, KV q8_0** | **456.77 ± 37.24** | **31.87 ± 1.73** |
+
+## Quality check: perplexity
+
+Speed numbers don't say anything about whether the model is still *good* at
+this quantization level. Perplexity does — lower is better, and it's the
+standard proxy metric for quantization quality loss. Tested against
+[wikitext-2-raw](https://huggingface.co/datasets/ggml-org/ci) (the
+standard corpus for this — llama.cpp's own `scripts/get-wikitext-2.sh` uses
+it), 50 chunks of 512 tokens each (a subset, not the full ~550-chunk test
+set — full run would take ~12+ minutes, this is a faster representative
+sample):
+
+```bash
+llama-perplexity.exe -m Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf -f wiki.test.raw -ngl 999 -ncmoe 30 -fa on -c 512 --chunks 50
+# Final estimate: PPL = 8.8606 +/- 0.23686
+```
+
+`-ncmoe` only changes *where* weights are computed (GPU vs CPU), not the
+weights themselves, so this number is unaffected by which `-ncmoe` value is
+used — it's purely a function of the quant (`UD-Q4_K_XL`).
+
+There's no other quant of this model benchmarked here to compare against,
+so treat this as a baseline number for the `UD-Q4_K_XL` quant specifically,
+useful if you want to test whether a different quant or config changes
+quality meaningfully — not a verdict on its own.
 
 ## Troubleshooting quick reference
 
@@ -249,5 +339,6 @@ process exit for VRAM to actually release before launching the next one.
 |---|---|---|
 | `--list-devices` shows nothing | CUDA backend DLL failed to load | Check for missing VC++ Redistributable DLLs (see Step 3) |
 | VRAM barely used, huge RAM usage, model "works" but slow | Silently running CPU-only despite `-ngl` | Same as above — confirm with `--list-devices` before assuming offload is active |
-| Request hangs forever, `/health` still returns 200 | `-ncmoe` too low, VRAM headroom under ~500MB — WDDM pages silently instead of erroring | Raise `-ncmoe` a few steps and re-test with `bench.py` against a real generation request, not just idle VRAM after load |
+| Request hangs forever, `/health` still returns 200 | `-ncmoe` too low, VRAM headroom under ~500MB — WDDM pages silently instead of erroring | Raise `-ncmoe` a few steps, or quantize the KV cache (`-ctk q8_0 -ctv q8_0`) to free headroom without raising `-ncmoe` at all — then re-test with `bench.py` against a real generation request, not just idle VRAM after load |
+| `llama-bench`/`llama-perplexity` missing, only `-impl.dll` files present | Unsloth's installer only ships the tools it uses directly | Pull the matching `.exe` files from the same release zip named in `UNSLOTH_PREBUILT_INFO.json` — guaranteed ABI-compatible, no build needed |
 | opencode can't call tools correctly | Chat template mismatch | Make sure `--jinja` is enabled so the model's own template is used |
