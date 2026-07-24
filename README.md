@@ -52,11 +52,14 @@ something you dial in by hand.
    which doesn't account for MoE expert offload to system RAM. `UD-Q4_K_XL`
    is the real sweet spot for a 12GB + 64GB combo.
 
-2. **Get a CUDA-enabled llama.cpp.** If you have Unsloth's tooling
-   installed, it may already have built one (`llama-server.exe` alongside a
-   `ggml-cuda.dll` under `llama.cpp/build/bin/Release`). Otherwise, build
-   from [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) with
-   `-DGGML_CUDA=ON`.
+2. **Get a CUDA-enabled llama.cpp.** This setup used a prebuilt one that
+   [Unsloth Studio](https://unsloth.ai) had already installed
+   (`llama-server.exe` alongside a `ggml-cuda.dll` under
+   `llama.cpp/build/bin/Release`) — check if you have the same. Otherwise,
+   build from [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp)
+   with `-DGGML_CUDA=ON`; see their
+   [build docs](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md)
+   for the CUDA toolkit / cmake / MSVC prerequisites.
 
 3. **Launch it** — [`start-qwen-coder.ps1`](./start-qwen-coder.ps1) has the
    tuned launch command (edit the two paths at the top for your machine):
@@ -209,16 +212,18 @@ attempt, with nearly double the headroom of the original.
 ## Getting real numbers: `llama-bench` & `llama-perplexity`
 
 <details>
-<summary>The Unsloth install only shipped <code>llama-server.exe</code> — here's how the other tools got added without a build toolchain</summary>
+<summary>The prebuilt install from step 2 only shipped <code>llama-server.exe</code> — here's how the other tools got added without a build toolchain</summary>
 
 `llama-bench` and `llama-perplexity` existed as internal `-impl.dll` files
 with no matching `.exe` wrapper, and no `cmake` was installed on this
-machine to build them. `UNSLOTH_PREBUILT_INFO.json` in the llama.cpp source
-tree records exactly which upstream release the existing build came from
-(`unslothai/llama.cpp`, tag `b10069-mix-fb3d4ca`). Downloading that same
-release's zip from GitHub and pulling the two `.exe` files out of it gives
-tools that are guaranteed DLL/ABI-compatible with the CUDA backend already
-installed — no build required, no version mismatch risk.
+machine to build them from source. A metadata file dropped alongside the
+build (`UNSLOTH_PREBUILT_INFO.json`) recorded exactly which upstream
+release it came from (`unslothai/llama.cpp`, tag `b10069-mix-fb3d4ca`).
+Downloading that same release's zip from GitHub and pulling the two `.exe`
+files out of it gives tools that are guaranteed DLL/ABI-compatible with the
+CUDA backend already installed — no build required, no version mismatch
+risk. If you built from source in step 2 instead, you'll have both tools
+already and can skip this.
 
 </details>
 
@@ -298,7 +303,7 @@ idle VRAM after load.
 | `--list-devices` shows nothing | CUDA backend DLL failed to load | Missing VC++ Redistributable DLLs — see Known issues |
 | VRAM barely used, huge RAM usage, model "works" but slow | Silently running CPU-only despite `-ngl` | Same as above — confirm with `--list-devices` before assuming offload is active |
 | Request hangs forever, `/health` still returns 200 | `-ncmoe` too low, VRAM headroom under ~500MB | Raise `-ncmoe`, or quantize the KV cache to free headroom instead |
-| `llama-bench`/`llama-perplexity` missing, only `-impl.dll` files present | Unsloth's installer only ships the tools it uses directly | Pull matching `.exe` files from the release named in `UNSLOTH_PREBUILT_INFO.json` |
+| `llama-bench`/`llama-perplexity` missing, only `-impl.dll` files present | Prebuilt install only shipped the tools it uses directly | Pull matching `.exe` files from the release named in `UNSLOTH_PREBUILT_INFO.json` (or build from source, which includes everything) |
 | opencode can't call tools correctly | Chat template mismatch | Make sure `--jinja` is enabled |
 
 ## Files in this repo
