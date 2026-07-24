@@ -223,12 +223,11 @@ opencode run -m llama.cpp/qwen3-coder-30b-a3b \
 If it runs `ls` itself and answers from the real output (not a guess), tool
 calling is wired correctly.
 
-## The actual test
-
-[`csv2json-test/`](./csv2json-test) is the model's output from a
-multi-file agentic test: a CLI tool with argument parsing and a test suite,
-built and self-verified end-to-end through opencode, entirely on local
-compute.
+As a fuller smoke test, try a multi-file build: ask it to write a small CLI
+tool with a couple of source files and a test suite, then have it run the
+tests itself and fix anything that fails. That exercises the full agent
+loop — planning, multi-file writes, running commands, reading the output,
+self-correcting — not just a single tool call.
 
 ## Reproducing the benchmark
 
