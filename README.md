@@ -218,6 +218,17 @@ capability gap between these two models lives in the harder, more
 open-ended, more context-heavy end of coding — not in "can it implement a
 clearly-specified function."
 
+**Same result, real time cost.** Identical pass rate isn't identical cost:
+summing the per-problem wall-clock time across all 40 HumanEval problems,
+Qwen3-Coder-30B-A3B took 228.9s total (5.72s/problem avg) versus Next's
+463.5s (11.59s/problem avg) — **Next took 2.02x as long to land on the
+exact same 39/40 result.** That's smaller than the 6x pp512 gap (these are
+short prompts/completions, so prompt processing doesn't dominate the way
+it does on a large agentic context) but it's real, and it's the number
+that most directly maps to "how long did I wait for a working answer" on
+typical small coding tasks — where, per the Findings above, Next doesn't
+even produce a better answer.
+
 **The speed cost lands somewhere non-obvious.** Generation speed only
 drops ~31% (32 → 22 tok/s) going to Next, but prompt processing drops ~6x
 (457 → 74 tok/s). Both models activate roughly the same ~3B params per
