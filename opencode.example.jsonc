@@ -7,9 +7,20 @@
       "options": {
         "baseURL": "http://127.0.0.1:8080/v1"
       },
+      // Both entries point at the same local server - llama-server only
+      // loads one model at a time, so whichever model name you pick here
+      // just labels whatever's actually running on port 8080. Restart the
+      // server with the other model's launch flags to actually switch.
       "models": {
         "qwen3-coder-30b-a3b": {
-          "name": "Qwen3-Coder-30B-A3B (local)",
+          "name": "Qwen3-Coder-30B-A3B (local, default - fast)",
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          }
+        },
+        "qwen3-coder-next": {
+          "name": "Qwen3-Coder-Next (local, slower - use for hard problems)",
           "limit": {
             "context": 32768,
             "output": 8192

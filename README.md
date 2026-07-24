@@ -169,6 +169,46 @@ hardware showing it sits at the knee of the curve. Q5 is worth it if
 quality matters more than interactivity for a given task; Q3 is worth it if
 you want the fastest possible loop and can tolerate a small quality drop.
 
+## Model comparison: Qwen3-Coder-30B-A3B vs. Qwen3-Coder-Next
+
+Same `UD-Q4_K_XL` quant tier, same tuning methodology, two different base
+models. [Qwen3-Coder-Next](https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF)
+(80B total, still only 3B active) claims 70.6% on SWE-bench Verified versus
+this baseline's ~50%. Worth checking whether that translates into something
+usable on this hardware, not just a leaderboard number:
+
+| Model | Total / Active | Size | `-ncmoe` | VRAM free | pp512 | tg128 | Perplexity |
+|---|---|---|---|---|---|---|---|
+| **Qwen3-Coder-30B-A3B (default)** | 30.5B / 3.3B | 17.7GB | 27 | 1161MB | **456.77 ± 37.24** | **31.87 ± 1.73** | 8.8606 ± 0.237 |
+| Qwen3-Coder-Next | 80B / 3B | 49.6GB | 41 | 863MB | 74.45 ± 23.85 | 22.12 ± 0.59 | **6.6825 ± 0.172** |
+
+The quality gap is real, not just a paper claim — PPL 6.68 vs. 8.86 is a
+large, unambiguous improvement, consistent with the SWE-bench delta. But
+it isn't free, and the cost shows up somewhere non-obvious: **generation
+speed only drops ~31% (32 → 22 tok/s), but prompt processing drops ~6x**
+(457 → 74 tok/s). Both models activate roughly the same ~3B params per
+token, so token-by-token generation cost stays close. Prompt processing is
+different — it touches the full CPU-resident expert set across the whole
+batch, and Next has far more of its 49.6GB sitting in system RAM at any
+given offload setting than the 30B model's 17.7GB does. More weight moving
+through RAM per prompt means prompt processing takes the brunt of the
+slowdown, generation barely notices.
+
+That distinction matters specifically for opencode: agentic coding sends
+large, repeated context (file contents, tool output, diffs) on every turn,
+which is a prompt-processing-heavy workload, not a generation-heavy one. A
+6x prompt-processing regression will be felt on every turn of a real
+session far more than the tg128 number alone suggests. On a long
+(~5800-token) stress prompt, Next's own throughput improves to ~179 tok/s
+(batching amortizes the RAM transfer better over a longer prompt) but is
+still ~9.6x slower than the 30B model's ~1712 tok/s on the same prompt —
+batching helps Next's own efficiency, it doesn't close the gap.
+
+**Verdict:** not a clean win, a real tradeoff. Qwen3-Coder-30B-A3B stays
+the default for fast iterative loops. Qwen3-Coder-Next is worth switching
+to per-task when a problem is hard enough that the quality gap matters more
+than turnaround time — not as a wholesale replacement.
+
 ## Tuning: `-ncmoe` and KV cache
 
 Tuning is empirical — pick values, load the model, check headroom under
@@ -318,6 +358,25 @@ idle VRAM after load.
 
 </details>
 
+<details>
+<summary><b>"Hang" that's actually just a slow model</b> — happened while tuning Qwen3-Coder-Next, worth checking before assuming WDDM paging</summary>
+
+While tuning a much larger model (80B total vs. 30.5B), several `-ncmoe`
+values that had *plenty* of VRAM headroom (as much as 2.8GB free — nowhere
+near the ~500MB danger zone above) still appeared to hang on `bench.py`.
+Turned out they weren't hung at all: `bench.py`'s long-prompt test alone
+was taking 30-40 seconds per request on this bigger, more CPU-offloaded
+model, and the benchmark script's own timeout was tuned for a model 6-9x
+faster. Confirmed by re-running the exact same request with a much longer
+timeout — it completed cleanly with real numbers.
+
+**Lesson:** before concluding a config is unstable, check whether the
+timeout you're using actually fits the model's expected speed. A genuinely
+larger, more CPU-offloaded model can legitimately take much longer per
+request without anything being wrong.
+
+</details>
+
 ## Troubleshooting quick reference
 
 | Symptom | Cause | Fix |
@@ -332,6 +391,7 @@ idle VRAM after load.
 
 | File | Purpose |
 |---|---|
-| [`start-qwen-coder.ps1`](./start-qwen-coder.ps1) | tuned launch script |
-| [`opencode.example.jsonc`](./opencode.example.jsonc) | opencode provider config to copy in |
+| [`start-qwen-coder.ps1`](./start-qwen-coder.ps1) | launch script, Qwen3-Coder-30B-A3B (default, fast) |
+| [`start-qwen-coder-next.ps1`](./start-qwen-coder-next.ps1) | launch script, Qwen3-Coder-Next (slower, smarter) |
+| [`opencode.example.jsonc`](./opencode.example.jsonc) | opencode provider config to copy in, both models |
 | [`bench.py`](./bench.py) | quick HTTP-based tok/s benchmark against a running server |
