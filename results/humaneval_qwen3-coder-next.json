@@ -1,0 +1,500 @@
+{
+  "label": "qwen3-coder-next",
+  "offsets": [
+    0,
+    40,
+    100,
+    140
+  ],
+  "slice_size": 20,
+  "passed": 79,
+  "total": 80,
+  "pass_at_1": 0.9875,
+  "wall_clock_seconds": 1245.4,
+  "generation_seconds": 1240.9,
+  "failures": [
+    "HumanEval/145"
+  ],
+  "results": [
+    {
+      "task_id": "HumanEval/0",
+      "pass": true,
+      "error": "",
+      "seconds": 12.63599967956543
+    },
+    {
+      "task_id": "HumanEval/1",
+      "pass": true,
+      "error": "",
+      "seconds": 13.378931522369385
+    },
+    {
+      "task_id": "HumanEval/2",
+      "pass": true,
+      "error": "",
+      "seconds": 6.267199754714966
+    },
+    {
+      "task_id": "HumanEval/3",
+      "pass": true,
+      "error": "",
+      "seconds": 9.119884014129639
+    },
+    {
+      "task_id": "HumanEval/4",
+      "pass": true,
+      "error": "",
+      "seconds": 10.269142389297485
+    },
+    {
+      "task_id": "HumanEval/5",
+      "pass": true,
+      "error": "",
+      "seconds": 8.456974506378174
+    },
+    {
+      "task_id": "HumanEval/6",
+      "pass": true,
+      "error": "",
+      "seconds": 11.25964069366455
+    },
+    {
+      "task_id": "HumanEval/7",
+      "pass": true,
+      "error": "",
+      "seconds": 6.876469850540161
+    },
+    {
+      "task_id": "HumanEval/8",
+      "pass": true,
+      "error": "",
+      "seconds": 9.034242153167725
+    },
+    {
+      "task_id": "HumanEval/9",
+      "pass": true,
+      "error": "",
+      "seconds": 9.263522624969482
+    },
+    {
+      "task_id": "HumanEval/10",
+      "pass": true,
+      "error": "",
+      "seconds": 12.281877040863037
+    },
+    {
+      "task_id": "HumanEval/11",
+      "pass": true,
+      "error": "",
+      "seconds": 11.318526983261108
+    },
+    {
+      "task_id": "HumanEval/12",
+      "pass": true,
+      "error": "",
+      "seconds": 9.443562030792236
+    },
+    {
+      "task_id": "HumanEval/13",
+      "pass": true,
+      "error": "",
+      "seconds": 20.634748458862305
+    },
+    {
+      "task_id": "HumanEval/14",
+      "pass": true,
+      "error": "",
+      "seconds": 26.77801203727722
+    },
+    {
+      "task_id": "HumanEval/15",
+      "pass": true,
+      "error": "",
+      "seconds": 28.39273190498352
+    },
+    {
+      "task_id": "HumanEval/16",
+      "pass": true,
+      "error": "",
+      "seconds": 28.51304817199707
+    },
+    {
+      "task_id": "HumanEval/17",
+      "pass": true,
+      "error": "",
+      "seconds": 39.352636098861694
+    },
+    {
+      "task_id": "HumanEval/18",
+      "pass": true,
+      "error": "",
+      "seconds": 32.34526753425598
+    },
+    {
+      "task_id": "HumanEval/19",
+      "pass": true,
+      "error": "",
+      "seconds": 32.950557231903076
+    },
+    {
+      "task_id": "HumanEval/40",
+      "pass": true,
+      "error": "",
+      "seconds": 39.66216540336609
+    },
+    {
+      "task_id": "HumanEval/41",
+      "pass": true,
+      "error": "",
+      "seconds": 39.49480628967285
+    },
+    {
+      "task_id": "HumanEval/42",
+      "pass": true,
+      "error": "",
+      "seconds": 31.958606243133545
+    },
+    {
+      "task_id": "HumanEval/43",
+      "pass": true,
+      "error": "",
+      "seconds": 39.80401134490967
+    },
+    {
+      "task_id": "HumanEval/44",
+      "pass": true,
+      "error": "",
+      "seconds": 21.164741039276123
+    },
+    {
+      "task_id": "HumanEval/45",
+      "pass": true,
+      "error": "",
+      "seconds": 36.31077742576599
+    },
+    {
+      "task_id": "HumanEval/46",
+      "pass": true,
+      "error": "",
+      "seconds": 23.998650550842285
+    },
+    {
+      "task_id": "HumanEval/47",
+      "pass": true,
+      "error": "",
+      "seconds": 9.660147905349731
+    },
+    {
+      "task_id": "HumanEval/48",
+      "pass": true,
+      "error": "",
+      "seconds": 5.511840105056763
+    },
+    {
+      "task_id": "HumanEval/49",
+      "pass": true,
+      "error": "",
+      "seconds": 8.7039053440094
+    },
+    {
+      "task_id": "HumanEval/50",
+      "pass": true,
+      "error": "",
+      "seconds": 5.2771337032318115
+    },
+    {
+      "task_id": "HumanEval/51",
+      "pass": true,
+      "error": "",
+      "seconds": 9.152373790740967
+    },
+    {
+      "task_id": "HumanEval/52",
+      "pass": true,
+      "error": "",
+      "seconds": 6.431143045425415
+    },
+    {
+      "task_id": "HumanEval/53",
+      "pass": true,
+      "error": "",
+      "seconds": 4.321308135986328
+    },
+    {
+      "task_id": "HumanEval/54",
+      "pass": true,
+      "error": "",
+      "seconds": 9.125983953475952
+    },
+    {
+      "task_id": "HumanEval/55",
+      "pass": true,
+      "error": "",
+      "seconds": 7.570863485336304
+    },
+    {
+      "task_id": "HumanEval/56",
+      "pass": true,
+      "error": "",
+      "seconds": 9.597779512405396
+    },
+    {
+      "task_id": "HumanEval/57",
+      "pass": true,
+      "error": "",
+      "seconds": 9.889096021652222
+    },
+    {
+      "task_id": "HumanEval/58",
+      "pass": true,
+      "error": "",
+      "seconds": 8.430248498916626
+    },
+    {
+      "task_id": "HumanEval/59",
+      "pass": true,
+      "error": "",
+      "seconds": 11.73656678199768
+    },
+    {
+      "task_id": "HumanEval/100",
+      "pass": true,
+      "error": "",
+      "seconds": 10.688567638397217
+    },
+    {
+      "task_id": "HumanEval/101",
+      "pass": true,
+      "error": "",
+      "seconds": 9.115579605102539
+    },
+    {
+      "task_id": "HumanEval/102",
+      "pass": true,
+      "error": "",
+      "seconds": 10.361661434173584
+    },
+    {
+      "task_id": "HumanEval/103",
+      "pass": true,
+      "error": "",
+      "seconds": 13.033713102340698
+    },
+    {
+      "task_id": "HumanEval/104",
+      "pass": true,
+      "error": "",
+      "seconds": 10.42300534248352
+    },
+    {
+      "task_id": "HumanEval/105",
+      "pass": true,
+      "error": "",
+      "seconds": 11.545652389526367
+    },
+    {
+      "task_id": "HumanEval/106",
+      "pass": true,
+      "error": "",
+      "seconds": 13.010761737823486
+    },
+    {
+      "task_id": "HumanEval/107",
+      "pass": true,
+      "error": "",
+      "seconds": 16.733513832092285
+    },
+    {
+      "task_id": "HumanEval/108",
+      "pass": true,
+      "error": "",
+      "seconds": 16.473320484161377
+    },
+    {
+      "task_id": "HumanEval/109",
+      "pass": true,
+      "error": "",
+      "seconds": 23.41249370574951
+    },
+    {
+      "task_id": "HumanEval/110",
+      "pass": true,
+      "error": "",
+      "seconds": 17.83773899078369
+    },
+    {
+      "task_id": "HumanEval/111",
+      "pass": true,
+      "error": "",
+      "seconds": 9.340479612350464
+    },
+    {
+      "task_id": "HumanEval/112",
+      "pass": true,
+      "error": "",
+      "seconds": 6.048563718795776
+    },
+    {
+      "task_id": "HumanEval/113",
+      "pass": true,
+      "error": "",
+      "seconds": 39.85961866378784
+    },
+    {
+      "task_id": "HumanEval/114",
+      "pass": true,
+      "error": "",
+      "seconds": 10.099678754806519
+    },
+    {
+      "task_id": "HumanEval/115",
+      "pass": true,
+      "error": "",
+      "seconds": 20.49154233932495
+    },
+    {
+      "task_id": "HumanEval/116",
+      "pass": true,
+      "error": "",
+      "seconds": 14.858053922653198
+    },
+    {
+      "task_id": "HumanEval/117",
+      "pass": true,
+      "error": "",
+      "seconds": 15.430687665939331
+    },
+    {
+      "task_id": "HumanEval/118",
+      "pass": true,
+      "error": "",
+      "seconds": 15.84177303314209
+    },
+    {
+      "task_id": "HumanEval/119",
+      "pass": true,
+      "error": "",
+      "seconds": 15.6470046043396
+    },
+    {
+      "task_id": "HumanEval/140",
+      "pass": true,
+      "error": "",
+      "seconds": 12.789774656295776
+    },
+    {
+      "task_id": "HumanEval/141",
+      "pass": true,
+      "error": "",
+      "seconds": 20.425445079803467
+    },
+    {
+      "task_id": "HumanEval/142",
+      "pass": true,
+      "error": "",
+      "seconds": 13.854310274124146
+    },
+    {
+      "task_id": "HumanEval/143",
+      "pass": true,
+      "error": "",
+      "seconds": 6.594458818435669
+    },
+    {
+      "task_id": "HumanEval/144",
+      "pass": true,
+      "error": "",
+      "seconds": 14.637483358383179
+    },
+    {
+      "task_id": "HumanEval/145",
+      "pass": false,
+      "error": "52, in <module>\n    check(order_by_points)\n    ~~~~~^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmpfb7t8zgc.py\", line 40, in check\n    assert candidate([1, 11, -1, -11, -12]) == [-1, -11, 1, -12, 11]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+      "seconds": 15.924140930175781
+    },
+    {
+      "task_id": "HumanEval/146",
+      "pass": true,
+      "error": "",
+      "seconds": 13.862534284591675
+    },
+    {
+      "task_id": "HumanEval/147",
+      "pass": true,
+      "error": "",
+      "seconds": 16.317930936813354
+    },
+    {
+      "task_id": "HumanEval/148",
+      "pass": true,
+      "error": "",
+      "seconds": 10.20840835571289
+    },
+    {
+      "task_id": "HumanEval/149",
+      "pass": true,
+      "error": "",
+      "seconds": 14.189702272415161
+    },
+    {
+      "task_id": "HumanEval/150",
+      "pass": true,
+      "error": "",
+      "seconds": 8.24152159690857
+    },
+    {
+      "task_id": "HumanEval/151",
+      "pass": true,
+      "error": "",
+      "seconds": 11.232721090316772
+    },
+    {
+      "task_id": "HumanEval/152",
+      "pass": true,
+      "error": "",
+      "seconds": 14.255757093429565
+    },
+    {
+      "task_id": "HumanEval/153",
+      "pass": true,
+      "error": "",
+      "seconds": 8.665821075439453
+    },
+    {
+      "task_id": "HumanEval/154",
+      "pass": true,
+      "error": "",
+      "seconds": 13.645848512649536
+    },
+    {
+      "task_id": "HumanEval/155",
+      "pass": true,
+      "error": "",
+      "seconds": 8.467803955078125
+    },
+    {
+      "task_id": "HumanEval/156",
+      "pass": true,
+      "error": "",
+      "seconds": 14.492969274520874
+    },
+    {
+      "task_id": "HumanEval/157",
+      "pass": true,
+      "error": "",
+      "seconds": 12.188493967056274
+    },
+    {
+      "task_id": "HumanEval/158",
+      "pass": true,
+      "error": "",
+      "seconds": 12.85781979560852
+    },
+    {
+      "task_id": "HumanEval/159",
+      "pass": true,
+      "error": "",
+      "seconds": 21.39530324935913
+    }
+  ]
+}
