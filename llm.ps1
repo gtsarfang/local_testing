@@ -13,7 +13,7 @@ param(
     [string]$Command = "status",
 
     [Parameter(Position = 1)]
-    [ValidateSet("default", "next", "gpt-oss")]
+    [ValidateSet("default", "next", "gpt-oss", "gemma")]
     [string]$Model
 )
 
@@ -23,10 +23,14 @@ $ErrorActionPreference = "Stop"
 $LlamaServer = "C:\Users\George\.unsloth\llama.cpp\build\bin\Release\llama-server.exe"
 $ModelsDir = "C:\Users\George\models"
 
+# -ncmoe is the one setting that intentionally varies per model (tuned to
+# leave >=~1GB free VRAM - see README "Benchmark standards" and "Tuning").
+# Everything else is held fixed across all models for comparability.
 $Models = [ordered]@{
     "default" = @{ File = "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf"; Ncmoe = 27; Desc = "Qwen3-Coder-30B-A3B - fast, default" }
     "next"    = @{ File = "Qwen3-Coder-Next-UD-Q4_K_XL.gguf";              Ncmoe = 41; Desc = "Qwen3-Coder-Next - slower, smarter" }
     "gpt-oss" = @{ File = "gpt-oss-20b-UD-Q4_K_XL.gguf";                   Ncmoe = 4;  Desc = "gpt-oss-20b - fastest tok/s, reasoning model" }
+    "gemma"   = @{ File = "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf";        Ncmoe = 11; Desc = "Gemma 4 26B A4B QAT - general-purpose, not coding-specialized" }
 }
 
 function Get-RunningModelKey {

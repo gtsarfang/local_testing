@@ -26,12 +26,10 @@ out explicitly where it matters — see [Known issues](#known-issues).*
 - Raw tok/s matters more than wall-clock time-to-answer, or the task is genuinely hard algorithmically → **gpt-oss-20b** (reasoning model — read the caveat before picking it for interactive use)
 
 **Five things worth knowing before you read further:**
-1. **A bigger sample changed the finding, and that's the point.** At n=40,
-   all three models scored identically on HumanEval. At n=80, a real (if
-   modest) gap appeared: Next 98.8%, default 96.2%, gpt-oss 93.8%. The
-   smaller sample wasn't wrong, it just wasn't enough — see
-   [Findings](#findings) for what that gap actually looks like next to the
-   70.6% SWE-bench claim.
+1. **Sample size changed the finding — see
+   [Findings: HumanEval](#findings-humaneval) for the full story.**
+   At n=40 all three models scored identically on HumanEval; at n=80 a
+   real gap appeared. Nothing in this repo is exempt from the same risk.
 2. **One problem breaks every model tested, at both sample sizes.**
    `HumanEval/145` is the *only* failure all three models share — strong,
    repeated evidence that its spec is genuinely ambiguous, not that these
@@ -41,17 +39,14 @@ out explicitly where it matters — see [Known issues](#known-issues).*
    before answering — it took 1.7x longer than the default to finish the
    same 80 HumanEval problems, and Next (despite similar tok/s to the
    default) took 2.7x longer.
-4. **On a harder, less-contaminated benchmark, the ranking flips — and
-   it's real, not a budget artifact.** HumanEval was largely saturated
-   (94-99% for all three) — real competitive programming (LiveCodeBench,
-   43-63%) actually discriminates, and gpt-oss-20b comes out *ahead*, not
-   behind. Every one of its failures was a token-budget truncation, zero
-   were a wrong answer — and testing that directly by quadrupling the
-   budget (4096→16384 tokens) pushed it to 76.7%, converting exactly the
-   recoverable truncations to correct answers while genuinely stuck ones
-   stayed stuck. Across 60 total attempts at two different budgets, it has
-   never once produced a wrong final answer on this problem set — see
-   [LiveCodeBench](#contamination-resistant-check-livecodebench).
+4. **On a harder, less-contaminated benchmark, the ranking flips.**
+   HumanEval was largely saturated (94-99% for all three) — real
+   competitive programming (LiveCodeBench, 43-63%) actually discriminates,
+   and gpt-oss-20b comes out *ahead*, not behind, at the same fixed
+   4096-token budget every model was tested at. A follow-up experiment
+   (not part of this comparison — see
+   [LiveCodeBench](#contamination-resistant-check-livecodebench)) found
+   its failures are all budget truncations, never wrong answers.
 5. **Every number here got sanity-checked before being trusted**, and nothing
    was reframed to fit a tidy story — Next held the "smartest model" title
    on every metric until the harder benchmark, where it doesn't lead. The
@@ -70,6 +65,7 @@ HumanEval — see the caveat in
 
 [TL;DR](#tldr) · [What makes this work](#what-makes-this-work) ·
 [Hardware & software](#hardware--software) · [Quick start](#quick-start) ·
+[Benchmark standards](#benchmark-standards) ·
 [Model comparison](#model-comparison) ·
 [LiveCodeBench (contamination check)](#contamination-resistant-check-livecodebench) ·
 [Quant comparison](#quant-comparison-intelligence-vs-speed) ·
@@ -146,11 +142,12 @@ specific sections may not transfer directly.
    [build docs](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md)
    for the CUDA toolkit / cmake / MSVC prerequisites.
 
-3. **Launch it** — [`start-qwen-coder.ps1`](./start-qwen-coder.ps1) has the
-   tuned launch command (edit the two paths at the top for your machine):
+3. **Launch it** — [`llm.ps1`](./llm.ps1) has the tuned launch commands for
+   all models compared here (edit the two paths at the top for your
+   machine):
 
    ```bash
-   powershell -File start-qwen-coder.ps1
+   powershell -File llm.ps1 switch default
    ```
 
 4. **Wire it into opencode** — copy [`opencode.example.jsonc`](./opencode.example.jsonc)
@@ -176,12 +173,11 @@ specific sections may not transfer directly.
    exercises the full loop: planning, multi-file writes, running commands,
    reading output, self-correcting.
 
-### Day-to-day: one CLI instead of remembering three scripts
+### Day-to-day: one CLI for everything
 
-With three models in rotation, `start-*.ps1` works for a first launch but
-means remembering which script goes with which model, and manually
-stopping whatever's already running first. [`llm.ps1`](./llm.ps1) is a
-single entry point for everything after that initial setup:
+With four models in rotation, [`llm.ps1`](./llm.ps1) is the single entry
+point — launching, switching, and status all go through it instead of
+separate scripts per model:
 
 ```bash
 powershell -File llm.ps1 status              # what's running, which model, VRAM used
@@ -197,6 +193,32 @@ actually release, starts the new one, and blocks until `/health` confirms
 it's ready — so the prompt doesn't return control until opencode would
 actually get a real response.
 
+## Benchmark standards
+
+Every comparison in this repo holds the same settings fixed across models,
+so a difference in the numbers reflects a difference in the models, not a
+difference in how each one was run.
+
+**Fixed for every model:** `UD-Q4_K_XL` quant tier · `-c 32768` ·
+`-ctk q8_0 -ctv q8_0` · `-fa on` · `--no-mmap` · `--jinja` · `-np 1` ·
+`-b 2048 -ub 512` (llama.cpp defaults, untested — see below) · **no
+speculative decoding** · eval `max_tokens` 4096 · eval `temperature` 0 ·
+`llama-bench` at `-r 3` · perplexity on wikitext-2-raw, 50 chunks, `-c 512`.
+
+**Deliberately varied:** `-ncmoe` — tuned per model to leave roughly
+≥1GB free VRAM (see [Tuning](#tuning--ncmoe-and-kv-cache)). This is the one
+knob that *has* to differ: a single fixed value would silently hang the
+larger models while wasting VRAM headroom on the smaller ones (see
+[Known issues](#known-issues)). Varying it is the point, not an
+inconsistency — everything else stays constant specifically so this is the
+only lever moving.
+
+**Untested, not rejected:** `-b`/`-ub` batch-size tuning, and speculative
+decoding / MTP (available in this build, but only Gemma 4 and Qwen 3.5+
+have drafter models — see [Known issues](#known-issues) for why it isn't
+mixed into the comparison below). Neither was found to help or hurt; they
+simply haven't been run here yet.
+
 ## Model comparison
 
 Every model here is measured the same three ways: **speed** (`llama-bench`
@@ -209,7 +231,7 @@ safe VRAM headroom, per [Tuning](#tuning--ncmoe-and-kv-cache)).
 
 **Results:**
 
-| Model | pp512 | tg128 | Perplexity | HumanEval | Wall-clock |
+| Model | pp512 | tg128 | Perplexity | HumanEval | Wall-clock (HumanEval n=80) |
 |---|---|---|---|---|---|
 | **Qwen3-Coder-30B-A3B (default)** | 456.77 ± 37.24 | 31.87 ± 1.73 | 8.8606 ± 0.237 | 77/80 (96.2%) | **455.6s** |
 | [Qwen3-Coder-Next](https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF) | 74.45 ± 23.85 | 22.12 ± 0.59 | **6.6825 ± 0.172** | **79/80 (98.8%)** | 1245.4s |
@@ -226,7 +248,7 @@ safe VRAM headroom, per [Tuning](#tuning--ncmoe-and-kv-cache)).
 ¹ gpt-oss-20b's perplexity is a known-broken measurement for this model
 family — see [Known issues](#known-issues).
 
-### Findings
+### Findings: HumanEval
 
 **A bigger sample changed the finding — that's the headline, not a footnote.**
 At n=40 (two 20-problem slices), all three models scored identically:
@@ -336,13 +358,13 @@ eliminate it. All three models here likely have training data past April
 2025 — Qwen3-Coder-Next specifically shipped February 2026. Treat this as
 meaningfully fresher, not proven-unseen.
 
-| Model | pass@1 | Passed (no truncation) | Truncated | Genuine wrong answer | Wall-clock |
+| Model | pass@1 | Passed (no truncation) | Truncated | Genuine wrong answer | Wall-clock (LCB n=30) |
 |---|---|---|---|---|---|
 | Qwen3-Coder-30B-A3B (default) | 13/30 (43.3%) | 13/30 (100% of attempts) | 0 | 17 | 1468.4s |
 | Qwen3-Coder-Next | 16/30 (53.3%) | 16/26 (61.5% of attempts) | 4 | 10 | **3026.6s** |
 | **gpt-oss-20b** | **19/30 (63.3%)** | **19/19 (100% of attempts)** | **11** | **0** | 1014.9s |
 
-### Findings
+### Findings: LiveCodeBench
 
 **This benchmark actually discriminates — HumanEval mostly didn't.** Pass
 rates here (43-63%) versus HumanEval's (94-99%) confirm HumanEval was
@@ -369,7 +391,7 @@ out of budget.
 **Qwen3-Coder-Next does not lead this benchmark, despite leading on
 perplexity, the SWE-bench claim, and HumanEval at n=80.** That's a real
 complication to the "Next is the smartest model here" framing from
-[Findings](#findings) above — it held that title on every metric until
+[Findings: HumanEval](#findings-humaneval) above — it held that title on every metric until
 this one. Whether that's because this specific competitive-programming
 style doesn't match Next's training emphasis, because 30 problems is a
 small sample, or something else isn't something this repo can distinguish
@@ -380,7 +402,7 @@ existing narrative.
 3026.6s wall-clock — 2.1x the default and 3.0x gpt-oss-20b — for a
 mid-pack accuracy result. On this specific benchmark, the default offers
 a better speed/accuracy tradeoff than Next does, which is not the pattern
-[Findings](#findings) established from HumanEval and perplexity. Neither
+[Findings: HumanEval](#findings-humaneval) established from HumanEval and perplexity. Neither
 result is "wrong" — they're measuring different things, which is exactly
 why a single benchmark (including this one) shouldn't be read as a final
 verdict on any of these models.
@@ -409,20 +431,22 @@ single failure on this problem set, at any tested budget, has been a
 timeout, never a wrong final answer. That's a real, distinctive property
 of this model on this task, not a fluke of one run.
 
-The cost: 2.7x the wall-clock time for +13.4 points of accuracy — pushing
-gpt-oss-20b's lead over Next (53.3% at Next's own tested budget) and the
-default (43.3%) even wider. **This isn't a fully apples-to-apples
-comparison** — Next and the default weren't rerun at a larger budget, so
-some of gpt-oss-20b's growing lead may partly reflect that it's the only
-model tested with room to actually use extra budget productively. Next is
-also a reasoning model and might improve too; the default isn't, and hits
-its token ceiling by writing a long-but-wrong solution rather than getting
-stuck mid-thought, so more budget likely helps it less. Reproduce with
-`python livecodebench_bench.py <label> <max_tokens>`.
+The cost: 2.7x the wall-clock time for +13.4 points of accuracy, on
+gpt-oss-20b alone. **This result is deliberately not folded into the
+comparison tables above** — Next and the default weren't rerun at 16384
+tokens, so there's no fair basis to say gpt-oss-20b's overall standing
+changes, only that *its own* ceiling is higher than the fixed-budget
+number suggests. Next is also a reasoning model and might show the same
+recoverable-capability pattern; the default isn't, and hits its token
+ceiling by writing a long-but-wrong solution rather than getting stuck
+mid-thought, so more budget likely helps it less — but that's a hypothesis,
+not something tested here (see [Limitations](#limitations)). Reproduce
+with `python livecodebench_bench.py <label> <max_tokens>`.
 
 Reproduce the original comparison with `python livecodebench_bench.py <label>`
-against a running server, or `powershell -File run_lcb_eval_all.ps1` for all
-three unattended. Raw results committed at `results/livecodebench_*.json`.
+against a running server, or `powershell -File run-evals.ps1 livecodebench`
+for all models unattended. Raw results committed at
+`results/livecodebench_*.json`.
 
 ## Quant comparison: intelligence vs. speed
 
@@ -451,8 +475,14 @@ you want the fastest possible loop and can tolerate a small quality drop.
 Tuning is empirical — pick values, load the model, check headroom under
 **real generation** (not just idle), adjust. [`bench.py`](./bench.py) hits
 a running server's `/v1/chat/completions` endpoint and reports the
-server's own `prompt tok/s` / `gen tok/s`; final numbers are validated with
-`llama-bench` (see [Benchmark methodology](#benchmark-methodology)).
+server's own `prompt tok/s` / `gen tok/s` — quick to iterate with, but
+noisy (HTTP overhead, no warmup, single short prompt). **The tables below
+are `bench.py` reads from the exploration process itself, not final
+numbers** — they're the honest record of how tuning actually went,
+including the wrong turns. The authoritative, warmed-up numbers reported
+everywhere else in this doc (Model comparison, Quant comparison) come from
+`llama-bench` (see [Benchmark methodology](#benchmark-methodology)), run
+once tuning settled on a config.
 
 **First pass**, KV cache at default `f16`:
 
@@ -559,7 +589,7 @@ this is a faster representative sample).
 ```bash
 python humaneval_bench.py <label>              # standard 80-problem sample (4 slices of 20)
 python humaneval_bench.py <label> 0 40         # custom slice offsets
-powershell -File run_eval_all.ps1              # runs all three models unattended
+powershell -File run-evals.ps1 humaneval        # runs all models unattended
 python humaneval_report.py                     # summarize results/*.json into a table
 ```
 
@@ -636,6 +666,16 @@ Honest caveats on everything above, not just the parts that look good:
   problem distributions, at different sample sizes, and this repo
   deliberately reports all three rather than picking the one that tells
   the cleanest story.
+- **The gpt-oss-20b 16384-token result is a single-model side experiment,
+  not a fourth comparison condition.** It's excluded from every comparison
+  table on purpose (see
+  [LiveCodeBench](#contamination-resistant-check-livecodebench)) because
+  only gpt-oss-20b was rerun at the larger budget. Whether Next or the
+  default would show a similar recoverable-capability pattern at 16384
+  tokens is an open question — testing it properly means rerunning all
+  models at the larger budget, which for Next alone would likely take
+  hours given its 3026s runtime at the smaller budget. Not done here;
+  explicitly future work, not an oversight.
 - **None of these benchmarks measure the actual target workload.** The
   goal is agentic coding through opencode — multi-file, tool-calling,
   large repeated context. HumanEval is isolated single-function
@@ -701,13 +741,13 @@ directly.
 <details>
 <summary><b>Requests hang forever</b> — <code>/health</code> still returns 200, generation never completes</summary>
 
-See [Tuning](#tuning--ncmoe-and-kv-cache) above — this happens when VRAM
-headroom drops under ~500MB. It's a Windows/WDDM-specific failure mode:
-CUDA allocations that don't fit get silently paged to system memory instead
-of erroring, so the request just never returns. Fix: raise `-ncmoe`, or
-quantize the KV cache to free headroom without raising `-ncmoe` at all —
-then re-test with `bench.py` against a real generation request, not just
-idle VRAM after load.
+Full mechanism (WDDM silently paging instead of returning a clean CUDA
+OOM) and the VRAM threshold that triggers it are in
+[Tuning](#tuning--ncmoe-and-kv-cache) — this is the same failure mode,
+listed here for searchability. Fix: raise `-ncmoe`, or quantize the KV
+cache to free headroom without raising `-ncmoe` at all — then re-test with
+`bench.py` against a real generation request, not just idle VRAM after
+load.
 
 </details>
 
@@ -769,18 +809,14 @@ evaluation method — don't just report the number.
 
 | File | Purpose |
 |---|---|
-| [`start-qwen-coder.ps1`](./start-qwen-coder.ps1) | launch script, Qwen3-Coder-30B-A3B (default, fast) |
-| [`start-qwen-coder-next.ps1`](./start-qwen-coder-next.ps1) | launch script, Qwen3-Coder-Next (slower, smarter) |
-| [`start-gpt-oss-20b.ps1`](./start-gpt-oss-20b.ps1) | launch script, gpt-oss-20b (fastest tok/s, reasoning model) |
-| [`llm.ps1`](./llm.ps1) | daily-use CLI: `status` / `list` / `switch [model]` / `stop` |
-| [`opencode.example.jsonc`](./opencode.example.jsonc) | opencode provider config to copy in, all three models |
+| [`llm.ps1`](./llm.ps1) | daily-use CLI: `status` / `list` / `switch [model]` / `stop` — also the launch config for every model |
+| [`opencode.example.jsonc`](./opencode.example.jsonc) | opencode provider config to copy in, all models |
 | [`bench.py`](./bench.py) | quick HTTP-based tok/s benchmark against a running server |
 | [`humaneval_bench.py`](./humaneval_bench.py) | pass@1 code-correctness eval against a running server |
-| [`run_eval_all.ps1`](./run_eval_all.ps1) | runs the HumanEval eval against all three models unattended |
 | [`humaneval_report.py`](./humaneval_report.py) | summarizes `results/humaneval_*.json` into a markdown table |
 | [`HumanEval.jsonl.gz`](./HumanEval.jsonl.gz) | official HumanEval dataset (164 problems), bundled for reproducibility |
 | [`livecodebench_bench.py`](./livecodebench_bench.py) | pass@1 eval against LiveCodeBench (stdin/stdout, contamination-reduced) |
-| [`run_lcb_eval_all.ps1`](./run_lcb_eval_all.ps1) | runs the LiveCodeBench eval against all three models unattended |
 | [`LiveCodeBench-AtCoder.jsonl.gz`](./LiveCodeBench-AtCoder.jsonl.gz) | stratified 30-problem AtCoder subset (Jan-Apr 2025), bundled for reproducibility |
+| [`run-evals.ps1`](./run-evals.ps1) | runs either eval (`humaneval` / `livecodebench`) against one or more models unattended |
 | [`results/`](./results) | raw per-problem output for both evals, committed so the numbers above are checkable |
 | [`LICENSE`](./LICENSE) | MIT |

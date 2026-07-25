@@ -32,6 +32,13 @@
             "context": 32768,
             "output": 8192
           }
+        },
+        "gemma-4-26b-a4b": {
+          "name": "Gemma 4 26B A4B QAT (local, general-purpose - not coding-specialized)",
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          }
         }
       }
     }

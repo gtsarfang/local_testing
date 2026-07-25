@@ -13,6 +13,7 @@ LABELS = [
     ("qwen3-coder-30b-a3b", "**Qwen3-Coder-30B-A3B (default)**"),
     ("qwen3-coder-next", "Qwen3-Coder-Next"),
     ("gpt-oss-20b", "gpt-oss-20b"),
+    ("gemma-4-26b-a4b", "Gemma 4 26B A4B QAT"),
 ]
 
 
