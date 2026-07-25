@@ -10,21 +10,22 @@ out explicitly where it matters — see [Known issues](#known-issues).*
 
 ## TL;DR
 
-| Model | pp512 | tg128 | Perplexity | HumanEval (n=80) | Wall-clock (80 problems) |
+| Model | pp512 | tg128 | Perplexity | HumanEval (n=80) | LiveCodeBench (n=30)² |
 |---|---|---|---|---|---|
-| **Qwen3-Coder-30B-A3B (default)** | 456.77 | 31.87 | 8.86 | 77/80 (96.2%) | **455.6s** |
-| Qwen3-Coder-Next | 74.45 | 22.12 | **6.68** | **79/80 (98.8%)** | 1245.4s |
-| gpt-oss-20b | **1393.10** | **71.43** | n/a¹ | 75/80 (93.8%) | 774.8s |
+| **Qwen3-Coder-30B-A3B (default)** | 456.77 | 31.87 | 8.86 | 77/80 (96.2%) | 13/30 (43.3%) |
+| Qwen3-Coder-Next | 74.45 | 22.12 | **6.68** | **79/80 (98.8%)** | 16/30 (53.3%) |
+| gpt-oss-20b | **1393.10** | **71.43** | n/a¹ | 75/80 (93.8%) | **19/30 (63.3%)** |
 
-*(full table with error margins, VRAM, and config in
-[Model comparison](#model-comparison).)*
+*(full tables with error margins, VRAM, config, and wall-clock time in
+[Model comparison](#model-comparison) and
+[LiveCodeBench](#contamination-resistant-check-livecodebench).)*
 
 **Which one do I use:**
 - Fast iterative loop, most day-to-day tasks → **Qwen3-Coder-30B-A3B** (the default)
-- A problem hard enough that quality matters more than turnaround time → **Qwen3-Coder-Next**
-- Raw tok/s matters more than wall-clock time-to-answer → **gpt-oss-20b** (reasoning model — read the caveat before picking it for interactive use)
+- A problem hard enough that quality matters more than turnaround time → **Qwen3-Coder-Next** (though see #5 below before assuming it's always the smartest option)
+- Raw tok/s matters more than wall-clock time-to-answer, or the task is genuinely hard algorithmically → **gpt-oss-20b** (reasoning model — read the caveat before picking it for interactive use)
 
-**Four things worth knowing before you read further:**
+**Five things worth knowing before you read further:**
 1. **A bigger sample changed the finding, and that's the point.** At n=40,
    all three models scored identically on HumanEval. At n=80, a real (if
    modest) gap appeared: Next 98.8%, default 96.2%, gpt-oss 93.8%. The
@@ -38,22 +39,36 @@ out explicitly where it matters — see [Known issues](#known-issues).*
 3. **tok/s ≠ wall-clock time.** gpt-oss-20b is the fastest model here by a
    wide margin, but it's a reasoning model that spends tokens thinking
    before answering — it took 1.7x longer than the default to finish the
-   same 80 problems, and Next (despite similar tok/s to the default) took
-   2.7x longer.
-4. **Every number here got sanity-checked before being trusted**, including
-   this section's own — the "identical at n=40" finding didn't survive
-   a bigger sample, and one harness fix (reasoning-model token budget)
-   turned out to be a partial fix, not a complete one, once tested at
-   scale. See [Benchmark methodology](#benchmark-methodology).
+   same 80 HumanEval problems, and Next (despite similar tok/s to the
+   default) took 2.7x longer.
+4. **On a harder, less-contaminated benchmark, the ranking flips.**
+   HumanEval was largely saturated (94-99% for all three) — real
+   competitive programming (LiveCodeBench, 43-63%) actually discriminates,
+   and gpt-oss-20b comes out *ahead*, not behind. The reason matters as
+   much as the result: every one of its failures was a token-budget
+   truncation, zero were a wrong answer — see
+   [LiveCodeBench](#contamination-resistant-check-livecodebench) for what
+   that implies about its real capability versus its measured score.
+5. **Every number here got sanity-checked before being trusted**, and nothing
+   was reframed to fit a tidy story — Next held the "smartest model" title
+   on every metric until the harder benchmark, where it doesn't lead. The
+   honest result is reported as the honest result. See
+   [Benchmark methodology](#benchmark-methodology) for the harness bugs
+   caught along the way.
 
 ¹ perplexity is a documented-broken metric for gpt-oss specifically, not a
 real quality number — see [Known issues](#known-issues).
+
+² LiveCodeBench reduces but does not eliminate contamination risk versus
+HumanEval — see the caveat in
+[LiveCodeBench](#contamination-resistant-check-livecodebench).
 
 ## Contents
 
 [TL;DR](#tldr) · [What makes this work](#what-makes-this-work) ·
 [Hardware & software](#hardware--software) · [Quick start](#quick-start) ·
 [Model comparison](#model-comparison) ·
+[LiveCodeBench (contamination check)](#contamination-resistant-check-livecodebench) ·
 [Quant comparison](#quant-comparison-intelligence-vs-speed) ·
 [Tuning](#tuning--ncmoe-and-kv-cache) ·
 [Benchmark methodology](#benchmark-methodology) ·
@@ -276,6 +291,80 @@ and the other three are real capability misses. **Lesson:** a fix
 validated on 20 problems isn't guaranteed to generalize to 80 — verify
 harness fixes at the same scale you're about to trust the results at.
 
+## Contamination-resistant check: LiveCodeBench
+
+HumanEval has been public since 2021 — models may have partially
+memorized it, which would inflate every result above. To reduce (not
+eliminate — see the caveat below) that risk,
+[`livecodebench_bench.py`](./livecodebench_bench.py) runs the same
+sandboxed pass@1 methodology against a stratified 30-problem sample
+(10 easy / 10 medium / 10 hard) from
+[LiveCodeBench](https://github.com/livecodebench/livecodebench)'s AtCoder
+subset — real competitive-programming problems with contest dates from
+January-April 2025, bundled as
+[`LiveCodeBench-AtCoder.jsonl.gz`](./LiveCodeBench-AtCoder.jsonl.gz).
+Unlike HumanEval's function-completion format, these are full stdin/stdout
+programs, checked against the real judge test cases.
+
+**Honest caveat up front:** this reduces contamination risk versus
+HumanEval (a ~15-month exposure window at most vs. ~5 years), it does not
+eliminate it. All three models here likely have training data past April
+2025 — Qwen3-Coder-Next specifically shipped February 2026. Treat this as
+meaningfully fresher, not proven-unseen.
+
+| Model | pass@1 | Passed (no truncation) | Truncated | Genuine wrong answer | Wall-clock |
+|---|---|---|---|---|---|
+| Qwen3-Coder-30B-A3B (default) | 13/30 (43.3%) | 13/30 (100% of attempts) | 0 | 17 | 1468.4s |
+| Qwen3-Coder-Next | 16/30 (53.3%) | 16/26 (61.5% of attempts) | 4 | 10 | **3026.6s** |
+| **gpt-oss-20b** | **19/30 (63.3%)** | **19/19 (100% of attempts)** | **11** | **0** | 1014.9s |
+
+### Findings
+
+**This benchmark actually discriminates — HumanEval mostly didn't.** Pass
+rates here (43-63%) versus HumanEval's (94-99%) confirm HumanEval was
+largely saturated for all three models; real competitive programming is
+still hard for every one of them. 11 of 30 problems were solved by all
+three (generally the easy tier); 8 of 30 were solved by none — genuinely
+too hard for any local model at this scale.
+
+**The ranking flips, and the reason why matters more than the ranking.**
+gpt-oss-20b leads on raw pass@1 (63.3%), ahead of Next (53.3%) and the
+default (43.3%) — the opposite order from HumanEval and from what the
+perplexity/SWE-bench numbers would predict. But look at what happens when
+you separate "wrong answer" from "no answer given": **every one of
+gpt-oss-20b's 11 failures was a truncation, zero were a genuine wrong
+answer.** When it actually finished reasoning, it was correct 19 times out
+of 19 — including 4 problems that neither other model solved at all. Its
+real capability may be understated by the raw pass@1, not overstated: it's
+being bottlenecked by the same 4096-token reasoning budget from
+[Benchmark methodology](#benchmark-methodology), not by a lack of
+problem-solving ability. Next, by contrast, produced a genuine wrong answer
+on 10 of its 14 failures — when it fails, it's usually not from running
+out of budget.
+
+**Qwen3-Coder-Next does not lead this benchmark, despite leading on
+perplexity, the SWE-bench claim, and HumanEval at n=80.** That's a real
+complication to the "Next is the smartest model here" framing from
+[Findings](#findings) above — it held that title on every metric until
+this one. Whether that's because this specific competitive-programming
+style doesn't match Next's training emphasis, because 30 problems is a
+small sample, or something else isn't something this repo can distinguish
+— but the honest result is the honest result, not the one that fits the
+existing narrative.
+
+**Next was also the most expensive option here, on every axis at once.**
+3026.6s wall-clock — 2.1x the default and 3.0x gpt-oss-20b — for a
+mid-pack accuracy result. On this specific benchmark, the default offers
+a better speed/accuracy tradeoff than Next does, which is not the pattern
+[Findings](#findings) established from HumanEval and perplexity. Neither
+result is "wrong" — they're measuring different things, which is exactly
+why a single benchmark (including this one) shouldn't be read as a final
+verdict on any of these models.
+
+Reproduce with `python livecodebench_bench.py <label>` against a running
+server, or `powershell -File run_lcb_eval_all.ps1` for all three
+unattended. Raw results committed at `results/livecodebench_*.json`.
+
 ## Quant comparison: intelligence vs. speed
 
 Same methodology, three [Unsloth Dynamic](https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF)
@@ -455,26 +544,39 @@ scale: verifying a fix works isn't the same as verifying it always works.)
 Honest caveats on everything above, not just the parts that look good:
 
 - **Sample sizes are modest, not definitive.** HumanEval is 80 of 164
-  official problems; perplexity is 50 of ~550 wikitext-2 chunks;
-  `llama-bench` uses 3+ repetitions, not dozens. These are large enough to
-  see real signal, not large enough to rule out a different result on a
-  different sample.
-- **HumanEval contamination is a real, unaddressed risk.** It's been
-  public since 2021 and is one of the most-used eval sets in the field —
-  models may have partially memorized it during training. If so, both the
-  n=40 "identical" result and the n=80 "small real gap" result partly
-  reflect memorization overlap, not purely reasoning ability. Nothing here
-  rules that out for either finding. A contamination-resistant eval (fresh
-  problems, e.g. LiveCodeBench-style) would be the actual fix — not done
-  yet.
-- **The evidence is still asymmetric, just less than it was.** At n=80,
-  this repo directly measured a real correctness edge for Next (79/80 vs.
-  77/80) — that part is no longer purely a proxy claim. But the *size* of
-  that edge (2.6 points) versus the SWE-bench claim (70.6% vs. ~50%, over
-  an order of magnitude larger) is not something independently verified
-  here — the large claimed gap still rests on Next's own model card, not
-  a benchmark run in this repo. Don't round "measurably better here" up to
-  "as much better as the leaderboard claims."
+  official problems; LiveCodeBench is a 30-problem stratified sample;
+  perplexity is 50 of ~550 wikitext-2 chunks; `llama-bench` uses 3+
+  repetitions, not dozens. These are large enough to see real signal, not
+  large enough to rule out a different result on a different sample — the
+  LiveCodeBench ranking flip on a 30-problem sample is a real result, but
+  30 problems is also small enough that a different stratified draw could
+  plausibly move it.
+- **Contamination risk is reduced, not eliminated, even with the
+  mitigation this repo actually built.** HumanEval has been public since
+  2021; if models partially memorized it, both the n=40 "identical" and
+  n=80 "small real gap" HumanEval results partly reflect memorization, not
+  purely reasoning ability.
+  [LiveCodeBench](#contamination-resistant-check-livecodebench) narrows
+  that exposure window from ~5 years to at most ~15 months — but its
+  newest available problems (April 2025) still predate all three models'
+  likely training cutoffs, so "contamination-resistant" here means
+  "meaningfully fresher," not "proven unseen." The LiveCodeBench ranking
+  flip is the strongest evidence in this repo that the earlier
+  "Next is smartest" framing was incomplete, precisely because it's the
+  benchmark with the least (not zero) contamination exposure — but it's
+  still not a clean result.
+- **The evidence is more balanced than it was, but still not resolved.**
+  At n=80, this repo directly measured a real correctness edge for Next on
+  HumanEval (79/80 vs. 77/80) — no longer purely a proxy claim. But on
+  LiveCodeBench, Next doesn't lead at all, and gpt-oss-20b's apparent lead
+  comes with its own asterisk (100% accuracy when it finishes, but over a
+  third of its attempts get cut off by the token budget). None of these
+  three numbers (SWE-bench's claimed 70.6%-vs-~50% gap, HumanEval's 2.6
+  -point edge for Next, LiveCodeBench's ranking favoring gpt-oss) should be
+  read as the final word — they measure different things, on different
+  problem distributions, at different sample sizes, and this repo
+  deliberately reports all three rather than picking the one that tells
+  the cleanest story.
 - **None of these benchmarks measure the actual target workload.** The
   goal is agentic coding through opencode — multi-file, tool-calling,
   large repeated context. HumanEval is isolated single-function
@@ -615,7 +717,10 @@ evaluation method — don't just report the number.
 | [`bench.py`](./bench.py) | quick HTTP-based tok/s benchmark against a running server |
 | [`humaneval_bench.py`](./humaneval_bench.py) | pass@1 code-correctness eval against a running server |
 | [`run_eval_all.ps1`](./run_eval_all.ps1) | runs the HumanEval eval against all three models unattended |
-| [`humaneval_report.py`](./humaneval_report.py) | summarizes `results/*.json` into a markdown table |
+| [`humaneval_report.py`](./humaneval_report.py) | summarizes `results/humaneval_*.json` into a markdown table |
 | [`HumanEval.jsonl.gz`](./HumanEval.jsonl.gz) | official HumanEval dataset (164 problems), bundled for reproducibility |
-| [`results/`](./results) | raw per-problem HumanEval output, committed so the numbers above are checkable |
+| [`livecodebench_bench.py`](./livecodebench_bench.py) | pass@1 eval against LiveCodeBench (stdin/stdout, contamination-reduced) |
+| [`run_lcb_eval_all.ps1`](./run_lcb_eval_all.ps1) | runs the LiveCodeBench eval against all three models unattended |
+| [`LiveCodeBench-AtCoder.jsonl.gz`](./LiveCodeBench-AtCoder.jsonl.gz) | stratified 30-problem AtCoder subset (Jan-Apr 2025), bundled for reproducibility |
+| [`results/`](./results) | raw per-problem output for both evals, committed so the numbers above are checkable |
 | [`LICENSE`](./LICENSE) | MIT |

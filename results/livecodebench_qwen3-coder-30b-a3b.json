@@ -1,0 +1,270 @@
+{
+  "label": "qwen3-coder-30b-a3b",
+  "source": "LiveCodeBench AtCoder subset (Jan-Apr 2025, stratified 10 easy/10 medium/10 hard)",
+  "passed": 13,
+  "total": 30,
+  "pass_at_1": 0.4333,
+  "wall_clock_seconds": 1468.4,
+  "generation_seconds": 1465.3,
+  "failures": [
+    "abc396_b",
+    "abc387_c",
+    "abc388_c",
+    "abc390_d",
+    "arc191_a",
+    "abc392_d",
+    "abc396_c",
+    "arc194_a",
+    "abc397_b",
+    "abc387_f",
+    "arc190_d",
+    "abc390_f",
+    "abc392_g",
+    "abc396_e",
+    "abc397_f",
+    "arc195_e",
+    "abc400_e"
+  ],
+  "results": [
+    {
+      "question_id": "abc387_b",
+      "title": "9x9 Sum",
+      "pass": true,
+      "error": "",
+      "seconds": 7.766007900238037,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc388_b",
+      "title": "Heavy Snake",
+      "pass": true,
+      "error": "",
+      "seconds": 4.461824417114258,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc389_b",
+      "title": "tcaF",
+      "pass": true,
+      "error": "",
+      "seconds": 2.800013303756714,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc390_a",
+      "title": "12435",
+      "pass": true,
+      "error": "",
+      "seconds": 4.728684186935425,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc391_a",
+      "title": "Lucky Direction",
+      "pass": true,
+      "error": "",
+      "seconds": 2.881117820739746,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc392_a",
+      "title": "Shuffled Equation",
+      "pass": true,
+      "error": "",
+      "seconds": 21.319334983825684,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc393_a",
+      "title": "Poisonous Oyster",
+      "pass": true,
+      "error": "",
+      "seconds": 7.405539274215698,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc394_b",
+      "title": "cat",
+      "pass": true,
+      "error": "",
+      "seconds": 2.1432886123657227,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc395_b",
+      "title": "Make Target",
+      "pass": true,
+      "error": "",
+      "seconds": 6.082425832748413,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc396_b",
+      "title": "Card Pile",
+      "pass": false,
+      "error": "Traceback (most recent call last):\n  File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmpax645u43.py\", line 13, in <module>\n    print(stack[top])  # Output the top card\n          ~~~~~^^^^^\nIndexError: list index out of range",
+      "seconds": 6.780810594558716,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc387_c",
+      "title": "Snake Numbers",
+      "pass": false,
+      "error": "File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmpwpv5jdt6.py\", line 87\n    def count_snake_dp(s):\nIndentationError: expected an indented block after 'for' statement on line 14",
+      "seconds": 100.62999629974365,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc388_c",
+      "title": "Various Kagamimochi",
+      "pass": false,
+      "error": "wrong output (got '0')",
+      "seconds": 7.268934011459351,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc390_d",
+      "title": "Stone XOR",
+      "pass": false,
+      "error": "wrong output (got '4')",
+      "seconds": 22.10401749610901,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "arc191_a",
+      "title": "Replace Digits",
+      "pass": false,
+      "error": "File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmpeii2yuij.py\", line 1\n    ```python\n    ^\nSyntaxError: invalid syntax",
+      "seconds": 137.44563388824463,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc392_d",
+      "title": "Doubles",
+      "pass": false,
+      "error": "wrong output (got '0.3333333333333333')",
+      "seconds": 8.848424673080444,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "arc192_a",
+      "title": "ARC Arc",
+      "pass": true,
+      "error": "",
+      "seconds": 52.4498496055603,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc394_d",
+      "title": "Colorful Bracket Sequence",
+      "pass": true,
+      "error": "",
+      "seconds": 4.1565470695495605,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc396_c",
+      "title": "Buy Balls",
+      "pass": false,
+      "error": "wrong output (got '5')",
+      "seconds": 22.05645775794983,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "arc194_a",
+      "title": "Operations on a Stack",
+      "pass": false,
+      "error": "File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmpc0w7sqvt.py\", line 1\n    ```python\n    ^\nSyntaxError: invalid syntax",
+      "seconds": 138.13832783699036,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc397_b",
+      "title": "Ticket Gate Log",
+      "pass": false,
+      "error": "wrong output (got '0')",
+      "seconds": 4.951318025588989,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc387_f",
+      "title": "Count Arrays",
+      "pass": false,
+      "error": "File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmpzzp8i1dh.py\", line 1\n    ```python\n    ^\nSyntaxError: invalid syntax",
+      "seconds": 137.32546377182007,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "arc190_d",
+      "title": "Matrix Pow Sum",
+      "pass": false,
+      "error": "File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmpxdbifyrk.py\", line 1\n    ```python\n    ^\nSyntaxError: invalid syntax",
+      "seconds": 138.08040475845337,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "abc390_f",
+      "title": "Double Sum 3",
+      "pass": false,
+      "error": "File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmp1tqf0f2y.py\", line 1\n    ```python\n    ^\nSyntaxError: invalid syntax",
+      "seconds": 137.58800411224365,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "abc392_g",
+      "title": "Fine Triplets",
+      "pass": false,
+      "error": "File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmp4utdxi0g.py\", line 1\n    ```python\n    ^\nSyntaxError: invalid syntax",
+      "seconds": 137.40246772766113,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "abc393_e",
+      "title": "GCD of Subset",
+      "pass": true,
+      "error": "",
+      "seconds": 40.04828596115112,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "arc193_a",
+      "title": "Complement Interval Graph",
+      "pass": true,
+      "error": "",
+      "seconds": 16.132801055908203,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "abc396_e",
+      "title": "Min of Restricted Sum",
+      "pass": false,
+      "error": "wrong output (got '-1')",
+      "seconds": 72.10083723068237,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "abc397_f",
+      "title": "Variety Split Hard",
+      "pass": false,
+      "error": "wrong output (got '4')",
+      "seconds": 12.47837519645691,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "arc195_e",
+      "title": "Random Tree Distance",
+      "pass": false,
+      "error": "File \"C:\\Users\\George\\AppData\\Local\\Temp\\tmpklejfnj2.py\", line 1\n    ```python\n    ^\nSyntaxError: invalid syntax",
+      "seconds": 137.9907727241516,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "abc400_e",
+      "title": "Ringo's Favorite Numbers 3",
+      "pass": false,
+      "error": "wrong output (got '324\\n36\\n36\\n1000000000000\\n121462441')",
+      "seconds": 71.78060531616211,
+      "difficulty": "hard"
+    }
+  ]
+}
