@@ -176,24 +176,26 @@ specific sections may not transfer directly.
    exercises the full loop: planning, multi-file writes, running commands,
    reading output, self-correcting.
 
-### Day-to-day: switching models without remembering three scripts
+### Day-to-day: one CLI instead of remembering three scripts
 
-With three models in rotation, `start-*.ps1` works but means remembering
-which script goes with which model, and manually stopping whatever's
-already running first. [`switch-model.ps1`](./switch-model.ps1) and
-[`check-status.ps1`](./check-status.ps1) handle that:
+With three models in rotation, `start-*.ps1` works for a first launch but
+means remembering which script goes with which model, and manually
+stopping whatever's already running first. [`llm.ps1`](./llm.ps1) is a
+single entry point for everything after that initial setup:
 
 ```bash
-powershell -File switch-model.ps1              # interactive menu
-powershell -File switch-model.ps1 -Model next   # or: default / gpt-oss
-powershell -File check-status.ps1               # which model's loaded, VRAM used
+powershell -File llm.ps1 status              # what's running, which model, VRAM used
+powershell -File llm.ps1 list                # available models
+powershell -File llm.ps1 switch              # interactive menu
+powershell -File llm.ps1 switch next         # or: default / gpt-oss, direct
+powershell -File llm.ps1 stop                # stop whatever's running
 ```
 
-`switch-model.ps1` no-ops if the requested model is already running
-(checks `/props` first), otherwise stops the current server, waits for
-VRAM to actually release, starts the new one, and blocks until `/health`
-confirms it's ready — so the prompt doesn't return control until opencode
-would actually get a real response.
+`switch` no-ops if the requested model is already running (checks
+`/props` first), otherwise stops the current server, waits for VRAM to
+actually release, starts the new one, and blocks until `/health` confirms
+it's ready — so the prompt doesn't return control until opencode would
+actually get a real response.
 
 ## Model comparison
 
@@ -770,8 +772,7 @@ evaluation method — don't just report the number.
 | [`start-qwen-coder.ps1`](./start-qwen-coder.ps1) | launch script, Qwen3-Coder-30B-A3B (default, fast) |
 | [`start-qwen-coder-next.ps1`](./start-qwen-coder-next.ps1) | launch script, Qwen3-Coder-Next (slower, smarter) |
 | [`start-gpt-oss-20b.ps1`](./start-gpt-oss-20b.ps1) | launch script, gpt-oss-20b (fastest tok/s, reasoning model) |
-| [`switch-model.ps1`](./switch-model.ps1) | switch the running server between the three models, no-ops if already correct |
-| [`check-status.ps1`](./check-status.ps1) | quick check: is a server running, which model, VRAM used |
+| [`llm.ps1`](./llm.ps1) | daily-use CLI: `status` / `list` / `switch [model]` / `stop` |
 | [`opencode.example.jsonc`](./opencode.example.jsonc) | opencode provider config to copy in, all three models |
 | [`bench.py`](./bench.py) | quick HTTP-based tok/s benchmark against a running server |
 | [`humaneval_bench.py`](./humaneval_bench.py) | pass@1 code-correctness eval against a running server |
