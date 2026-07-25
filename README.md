@@ -41,14 +41,17 @@ out explicitly where it matters — see [Known issues](#known-issues).*
    before answering — it took 1.7x longer than the default to finish the
    same 80 HumanEval problems, and Next (despite similar tok/s to the
    default) took 2.7x longer.
-4. **On a harder, less-contaminated benchmark, the ranking flips.**
-   HumanEval was largely saturated (94-99% for all three) — real
-   competitive programming (LiveCodeBench, 43-63%) actually discriminates,
-   and gpt-oss-20b comes out *ahead*, not behind. The reason matters as
-   much as the result: every one of its failures was a token-budget
-   truncation, zero were a wrong answer — see
-   [LiveCodeBench](#contamination-resistant-check-livecodebench) for what
-   that implies about its real capability versus its measured score.
+4. **On a harder, less-contaminated benchmark, the ranking flips — and
+   it's real, not a budget artifact.** HumanEval was largely saturated
+   (94-99% for all three) — real competitive programming (LiveCodeBench,
+   43-63%) actually discriminates, and gpt-oss-20b comes out *ahead*, not
+   behind. Every one of its failures was a token-budget truncation, zero
+   were a wrong answer — and testing that directly by quadrupling the
+   budget (4096→16384 tokens) pushed it to 76.7%, converting exactly the
+   recoverable truncations to correct answers while genuinely stuck ones
+   stayed stuck. Across 60 total attempts at two different budgets, it has
+   never once produced a wrong final answer on this problem set — see
+   [LiveCodeBench](#contamination-resistant-check-livecodebench).
 5. **Every number here got sanity-checked before being trusted**, and nothing
    was reframed to fit a tidy story — Next held the "smartest model" title
    on every metric until the harder benchmark, where it doesn't lead. The
@@ -361,9 +364,44 @@ result is "wrong" — they're measuring different things, which is exactly
 why a single benchmark (including this one) shouldn't be read as a final
 verdict on any of these models.
 
-Reproduce with `python livecodebench_bench.py <label>` against a running
-server, or `powershell -File run_lcb_eval_all.ps1` for all three
-unattended. Raw results committed at `results/livecodebench_*.json`.
+### Follow-up: is gpt-oss-20b actually that capable, or just budget-starved?
+
+The zero-wrong-answers pattern above raised a direct, testable question:
+would a bigger reasoning budget convert more truncations into correct
+answers, or does the model hit a genuine capability ceiling regardless of
+budget? Reran gpt-oss-20b's same 30-problem set with `max_tokens` at
+16384 (4x the original):
+
+| Budget | pass@1 | Truncated | Wrong answer | Wall-clock |
+|---|---|---|---|---|
+| 4096 tokens | 19/30 (63.3%) | 11 | **0** | 1014.9s |
+| **16384 tokens** | **23/30 (76.7%)** | 7 | **0** | 2746.4s |
+
+Answer: **both.** Exactly 4 of the 11 originally-truncated problems
+(`abc390_f`, `abc396_e`, `abc397_f`, `arc192_a`) flipped to correct with
+more room to think — real, recoverable capability that the smaller budget
+was hiding. The other 7 stayed truncated even at 16384 tokens, so either
+they need more still or the model is stuck in a non-converging reasoning
+loop that additional budget alone won't fix. **The zero-genuine-wrong-answer
+pattern held perfectly across all 60 attempts at both budgets** — every
+single failure on this problem set, at any tested budget, has been a
+timeout, never a wrong final answer. That's a real, distinctive property
+of this model on this task, not a fluke of one run.
+
+The cost: 2.7x the wall-clock time for +13.4 points of accuracy — pushing
+gpt-oss-20b's lead over Next (53.3% at Next's own tested budget) and the
+default (43.3%) even wider. **This isn't a fully apples-to-apples
+comparison** — Next and the default weren't rerun at a larger budget, so
+some of gpt-oss-20b's growing lead may partly reflect that it's the only
+model tested with room to actually use extra budget productively. Next is
+also a reasoning model and might improve too; the default isn't, and hits
+its token ceiling by writing a long-but-wrong solution rather than getting
+stuck mid-thought, so more budget likely helps it less. Reproduce with
+`python livecodebench_bench.py <label> <max_tokens>`.
+
+Reproduce the original comparison with `python livecodebench_bench.py <label>`
+against a running server, or `powershell -File run_lcb_eval_all.ps1` for all
+three unattended. Raw results committed at `results/livecodebench_*.json`.
 
 ## Quant comparison: intelligence vs. speed
 

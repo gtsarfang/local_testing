@@ -1,0 +1,253 @@
+{
+  "label": "gpt-oss-20b-max16k",
+  "source": "LiveCodeBench AtCoder subset (Jan-Apr 2025, stratified 10 easy/10 medium/10 hard)",
+  "passed": 23,
+  "total": 30,
+  "pass_at_1": 0.7667,
+  "wall_clock_seconds": 2746.4,
+  "generation_seconds": 2738.3,
+  "failures": [
+    "abc387_c",
+    "arc191_a",
+    "arc194_a",
+    "abc387_f",
+    "arc190_d",
+    "arc193_a",
+    "arc195_e"
+  ],
+  "results": [
+    {
+      "question_id": "abc387_b",
+      "title": "9x9 Sum",
+      "pass": true,
+      "error": "",
+      "seconds": 13.566454410552979,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc388_b",
+      "title": "Heavy Snake",
+      "pass": true,
+      "error": "",
+      "seconds": 3.907247304916382,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc389_b",
+      "title": "tcaF",
+      "pass": true,
+      "error": "",
+      "seconds": 5.601930618286133,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc390_a",
+      "title": "12435",
+      "pass": true,
+      "error": "",
+      "seconds": 4.664034605026245,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc391_a",
+      "title": "Lucky Direction",
+      "pass": true,
+      "error": "",
+      "seconds": 2.887690305709839,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc392_a",
+      "title": "Shuffled Equation",
+      "pass": true,
+      "error": "",
+      "seconds": 3.8690736293792725,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc393_a",
+      "title": "Poisonous Oyster",
+      "pass": true,
+      "error": "",
+      "seconds": 10.940414190292358,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc394_b",
+      "title": "cat",
+      "pass": true,
+      "error": "",
+      "seconds": 2.4079484939575195,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc395_b",
+      "title": "Make Target",
+      "pass": true,
+      "error": "",
+      "seconds": 14.688605070114136,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc396_b",
+      "title": "Card Pile",
+      "pass": true,
+      "error": "",
+      "seconds": 3.699047088623047,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc387_c",
+      "title": "Snake Numbers",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 248.68148565292358
+    },
+    {
+      "question_id": "abc388_c",
+      "title": "Various Kagamimochi",
+      "pass": true,
+      "error": "",
+      "seconds": 22.38987684249878,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc390_d",
+      "title": "Stone XOR",
+      "pass": true,
+      "error": "",
+      "seconds": 32.48342299461365,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "arc191_a",
+      "title": "Replace Digits",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 249.98354601860046
+    },
+    {
+      "question_id": "abc392_d",
+      "title": "Doubles",
+      "pass": true,
+      "error": "",
+      "seconds": 20.554497718811035,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "arc192_a",
+      "title": "ARC Arc",
+      "pass": true,
+      "error": "",
+      "seconds": 148.68993973731995,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc394_d",
+      "title": "Colorful Bracket Sequence",
+      "pass": true,
+      "error": "",
+      "seconds": 6.956661701202393,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc396_c",
+      "title": "Buy Balls",
+      "pass": true,
+      "error": "",
+      "seconds": 29.264476776123047,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "arc194_a",
+      "title": "Operations on a Stack",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 251.8357071876526
+    },
+    {
+      "question_id": "abc397_b",
+      "title": "Ticket Gate Log",
+      "pass": true,
+      "error": "",
+      "seconds": 54.56120562553406,
+      "difficulty": "medium"
+    },
+    {
+      "question_id": "abc387_f",
+      "title": "Count Arrays",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 251.49332666397095
+    },
+    {
+      "question_id": "arc190_d",
+      "title": "Matrix Pow Sum",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 252.6138346195221
+    },
+    {
+      "question_id": "abc390_f",
+      "title": "Double Sum 3",
+      "pass": true,
+      "error": "",
+      "seconds": 75.06119656562805,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "abc392_g",
+      "title": "Fine Triplets",
+      "pass": true,
+      "error": "",
+      "seconds": 31.093745946884155,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "abc393_e",
+      "title": "GCD of Subset",
+      "pass": true,
+      "error": "",
+      "seconds": 29.44299578666687,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "arc193_a",
+      "title": "Complement Interval Graph",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 251.9074091911316
+    },
+    {
+      "question_id": "abc396_e",
+      "title": "Min of Restricted Sum",
+      "pass": true,
+      "error": "",
+      "seconds": 195.86190462112427,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "abc397_f",
+      "title": "Variety Split Hard",
+      "pass": true,
+      "error": "",
+      "seconds": 210.2942864894867,
+      "difficulty": "hard"
+    },
+    {
+      "question_id": "arc195_e",
+      "title": "Random Tree Distance",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 251.62811398506165
+    },
+    {
+      "question_id": "abc400_e",
+      "title": "Ringo's Favorite Numbers 3",
+      "pass": true,
+      "error": "",
+      "seconds": 57.312764167785645,
+      "difficulty": "hard"
+    }
+  ]
+}

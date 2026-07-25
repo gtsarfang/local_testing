@@ -7,7 +7,7 @@ eliminate contamination risk: the newest available LiveCodeBench problems
 (Jan-Apr 2025) still predate all three models' likely training cutoffs.
 
 Usage:
-    python livecodebench_bench.py <label>
+    python livecodebench_bench.py <label> [max_tokens]
 """
 
 import gzip
@@ -26,7 +26,7 @@ HERE = Path(__file__).parent
 DATA_PATH = HERE / "LiveCodeBench-AtCoder.jsonl.gz"
 RESULTS_DIR = HERE / "results"
 
-MAX_TOKENS = 4096  # same reasoning-model lesson as humaneval_bench.py
+MAX_TOKENS = int(sys.argv[2]) if len(sys.argv) > 2 else 4096  # same reasoning-model lesson as humaneval_bench.py
 EXEC_TIMEOUT_S = 10
 
 SYSTEM = (
