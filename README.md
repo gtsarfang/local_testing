@@ -15,6 +15,7 @@ out explicitly where it matters — see [Known issues](#known-issues).*
 | **Qwen3-Coder-30B-A3B (default)** | 456.77 | 31.87 | 8.86 | 77/80 (96.2%) | 13/30 (43.3%) |
 | Qwen3-Coder-Next | 74.45 | 22.12 | **6.68** | **79/80 (98.8%)** | 16/30 (53.3%) |
 | gpt-oss-20b | **1393.10** | **71.43** | n/a¹ | 75/80 (93.8%) | **19/30 (63.3%)** |
+| Gemma 4 26B A4B QAT³ | 716.21 | 49.28 | n/a¹ | 62/80 (77.5%) | 3/30 (10.0%) |
 
 *(full tables with error margins, VRAM, config, and wall-clock time in
 [Model comparison](#model-comparison) and
@@ -24,8 +25,9 @@ out explicitly where it matters — see [Known issues](#known-issues).*
 - Fast iterative loop, most day-to-day tasks → **Qwen3-Coder-30B-A3B** (the default)
 - A problem hard enough that quality matters more than turnaround time → **Qwen3-Coder-Next** (though see #5 below before assuming it's always the smartest option)
 - Raw tok/s matters more than wall-clock time-to-answer, or the task is genuinely hard algorithmically → **gpt-oss-20b** (reasoning model — read the caveat before picking it for interactive use)
+- General-purpose/multimodal tasks, not coding specifically → **Gemma 4 26B A4B QAT** (not a coding specialist, and its coding scores here are heavily budget-truncated — read [its caveats](#gemma-4-26b-a4b-qat-read-this-before-the-numbers-above) before drawing any conclusion from the table above)
 
-**Five things worth knowing before you read further:**
+**Six things worth knowing before you read further:**
 1. **Sample size changed the finding — see
    [Findings: HumanEval](#findings-humaneval) for the full story.**
    At n=40 all three models scored identically on HumanEval; at n=80 a
@@ -53,13 +55,30 @@ out explicitly where it matters — see [Known issues](#known-issues).*
    honest result is reported as the honest result. See
    [Benchmark methodology](#benchmark-methodology) for the harness bugs
    caught along the way.
+6. **Gemma 4 26B A4B QAT's low coding scores are almost entirely a budget
+   artifact, not a capability gap.** Every one of its 18 HumanEval failures
+   and 27 of its 30 LiveCodeBench failures were the same "ran out of the
+   4096-token reasoning budget mid-thought" truncation seen with gpt-oss —
+   just far more often. When it actually finished reasoning, it was correct
+   62/62 times on HumanEval and 3/3 on LiveCodeBench (100% both times). It's
+   also a general-purpose/multimodal model being scored on a
+   coding-specialist axis it wasn't built for — see its
+   [caveats](#gemma-4-26b-a4b-qat-read-this-before-the-numbers-above) before
+   reading the TL;DR row above as a fair coding-ability comparison.
 
-¹ perplexity is a documented-broken metric for gpt-oss specifically, not a
-real quality number — see [Known issues](#known-issues).
+¹ perplexity is a documented-broken metric for gpt-oss and Gemma 4
+specifically (two different bugs, same result: not a real quality number) —
+see [Known issues](#known-issues).
 
 ² LiveCodeBench reduces but does not eliminate contamination risk versus
 HumanEval — see the caveat in
 [LiveCodeBench](#contamination-resistant-check-livecodebench).
+
+³ despite sharing the `UD-Q4_K_XL` filename convention with the other three
+models, Gemma's is QAT (quantization-aware trained), a different method —
+`llama-bench` reports its actual ftype as `Q4_0`, not `Q4_K - Medium` like
+everything else — see its
+[caveats](#gemma-4-26b-a4b-qat-read-this-before-the-numbers-above).
 
 ## Contents
 
@@ -152,7 +171,7 @@ specific sections may not transfer directly.
 
 4. **Wire it into opencode** — copy [`opencode.example.jsonc`](./opencode.example.jsonc)
    into your opencode config (`~/.config/opencode/opencode.jsonc`) — it
-   defines all three models compared here as a single `llama.cpp` provider,
+   defines all four models compared here as a single `llama.cpp` provider,
    pointing at `http://127.0.0.1:8080/v1`. Then:
 
    ```bash
@@ -199,11 +218,19 @@ Every comparison in this repo holds the same settings fixed across models,
 so a difference in the numbers reflects a difference in the models, not a
 difference in how each one was run.
 
-**Fixed for every model:** `UD-Q4_K_XL` quant tier · `-c 32768` ·
+**Fixed for every model:** `UD-Q4_K_XL` quant tier* · `-c 32768` ·
 `-ctk q8_0 -ctv q8_0` · `-fa on` · `--no-mmap` · `--jinja` · `-np 1` ·
 `-b 2048 -ub 512` (llama.cpp defaults, untested — see below) · **no
 speculative decoding** · eval `max_tokens` 4096 · eval `temperature` 0 ·
 `llama-bench` at `-r 3` · perplexity on wikitext-2-raw, 50 chunks, `-c 512`.
+
+\* **Not literally true for Gemma 4.** It ships under the same `UD-Q4_K_XL`
+filename convention, but it's a QAT (quantization-aware trained) model —
+`llama-bench` reports its real ftype as `Q4_0`, not `Q4_K - Medium` like the
+other three. The filename implies a fixed quant tier across all four models;
+that's not actually the case for Gemma, and it's called out explicitly here
+rather than glossed over — see its
+[caveats](#gemma-4-26b-a4b-qat-read-this-before-the-numbers-above).
 
 **Deliberately varied:** `-ncmoe` — tuned per model to leave roughly
 ≥1GB free VRAM (see [Tuning](#tuning--ncmoe-and-kv-cache)). This is the one
@@ -236,6 +263,7 @@ safe VRAM headroom, per [Tuning](#tuning--ncmoe-and-kv-cache)).
 | **Qwen3-Coder-30B-A3B (default)** | 456.77 ± 37.24 | 31.87 ± 1.73 | 8.8606 ± 0.237 | 77/80 (96.2%) | **455.6s** |
 | [Qwen3-Coder-Next](https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF) | 74.45 ± 23.85 | 22.12 ± 0.59 | **6.6825 ± 0.172** | **79/80 (98.8%)** | 1245.4s |
 | [gpt-oss-20b](https://huggingface.co/unsloth/gpt-oss-20b-GGUF) | **1393.10 ± 70.51** | **71.43 ± 0.31** | not comparable¹ | 75/80 (93.8%) | 774.8s |
+| [Gemma 4 26B A4B QAT](https://huggingface.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF)² | 716.21 ± 31.83 | 49.28 ± 0.84 | not comparable¹ | 62/80 (77.5%) | 3447.0s |
 
 **Tuned config:**
 
@@ -244,9 +272,58 @@ safe VRAM headroom, per [Tuning](#tuning--ncmoe-and-kv-cache)).
 | Qwen3-Coder-30B-A3B | 30.5B / 3.3B | 17.7GB | 27 | 1161MB |
 | Qwen3-Coder-Next | 80B / 3B | 49.6GB | 41 | 863MB |
 | gpt-oss-20b | 21B / 3.6B | 11.9GB | 4 | 1343MB |
+| Gemma 4 26B A4B QAT | 26B / 4B | 14.2GB | 11 | 1240MB |
 
-¹ gpt-oss-20b's perplexity is a known-broken measurement for this model
-family — see [Known issues](#known-issues).
+¹ gpt-oss-20b's and Gemma 4's perplexity are each a known-broken measurement,
+for different reasons specific to each model family — see
+[Known issues](#known-issues).
+
+² read the [caveats](#gemma-4-26b-a4b-qat-read-this-before-the-numbers-above)
+before treating this row as a like-for-like coding comparison — it's a
+general-purpose/multimodal model, a different quant method than the other
+three despite the shared filename tier, and its HumanEval score above is
+dominated by reasoning-budget truncation, not wrong answers.
+
+### Gemma 4 26B A4B QAT: read this before the numbers above
+
+Gemma 4 was added after [a tweet thread](https://x.com/analogalok) about
+running it at very long context on an 8GB card — it's a genuinely different
+kind of model from the other three, not a fourth coding specialist, and its
+raw scores above will mislead if read the same way. Four things to know:
+
+1. **General-purpose and multimodal, not coding-specialized.** The other
+   three models here are coding models by design; Gemma 4 is not. A lower
+   coding score is a legitimate "generalist vs. specialist" data point, not
+   a failure — it's not competing on a level playing field with the other
+   three by task focus, only by hardware.
+2. **QAT is a different quantization method, despite the shared filename
+   tier.** Every other model here is Unsloth's post-hoc Dynamic quant at
+   `UD-Q4_K_XL`. Gemma's GGUF uses the same filename convention but is
+   quantization-aware trained — and it shows: `llama-bench` reports its
+   ftype as `Q4_0`, not `Q4_K - Medium` like the other three (see the
+   [Benchmark standards](#benchmark-standards) asterisk). Comparing its
+   numbers directly to the other three's is comparing two different
+   quantization methods that happen to share a filename string.
+3. **Vision is untested here.** Gemma 4 is multimodal; the `mmproj` vision
+   component was skipped entirely for this comparison (text-only), purely
+   for comparability with the other three text-only models. This repo makes
+   no claim about its vision capability.
+4. **It's a reasoning model, and the fixed 4096-token budget bottlenecks it
+   harder than any other model tested.** Like gpt-oss-20b, llama.cpp surfaces
+   its chain-of-thought in a separate `reasoning_content` field, and
+   `finish_reason: "length"` can hit before `content` (the actual answer)
+   is ever written. Every one of its 18 HumanEval failures and 27 of its 30
+   LiveCodeBench failures were this exact truncation — not a wrong answer.
+   When it actually finished reasoning within budget, it was correct
+   **100% of the time on both evals** (62/62 HumanEval, 3/3 LiveCodeBench).
+   Its raw pass@1 numbers in the tables above are a *budget* measurement as
+   much as a *capability* one — see
+   [Findings: HumanEval](#findings-humaneval) and the
+   [LiveCodeBench table](#contamination-resistant-check-livecodebench) for
+   the same pattern already documented for gpt-oss-20b, just far more
+   pronounced here. No larger-budget rerun was done for Gemma in this pass
+   (see [Limitations](#limitations)) — the 4096 number is a floor on its
+   real capability, not a ceiling.
 
 ### Findings: HumanEval
 
@@ -363,6 +440,7 @@ meaningfully fresher, not proven-unseen.
 | Qwen3-Coder-30B-A3B (default) | 13/30 (43.3%) | 13/30 (100% of attempts) | 0 | 17 | 1468.4s |
 | Qwen3-Coder-Next | 16/30 (53.3%) | 16/26 (61.5% of attempts) | 4 | 10 | **3026.6s** |
 | **gpt-oss-20b** | **19/30 (63.3%)** | **19/19 (100% of attempts)** | **11** | **0** | 1014.9s |
+| Gemma 4 26B A4B QAT | 3/30 (10.0%) | 3/3 (100% of attempts) | 27 | 0 | 2721.0s |
 
 ### Findings: LiveCodeBench
 
@@ -647,7 +725,7 @@ Honest caveats on everything above, not just the parts that look good:
   purely reasoning ability.
   [LiveCodeBench](#contamination-resistant-check-livecodebench) narrows
   that exposure window from ~5 years to at most ~15 months — but its
-  newest available problems (April 2025) still predate all three models'
+  newest available problems (April 2025) still predate all four models'
   likely training cutoffs, so "contamination-resistant" here means
   "meaningfully fresher," not "proven unseen." The LiveCodeBench ranking
   flip is the strongest evidence in this repo that the earlier
@@ -672,8 +750,12 @@ Honest caveats on everything above, not just the parts that look good:
   [LiveCodeBench](#contamination-resistant-check-livecodebench)) because
   only gpt-oss-20b was rerun at the larger budget. Whether Next or the
   default would show a similar recoverable-capability pattern at 16384
-  tokens is an open question — testing it properly means rerunning all
-  models at the larger budget, which for Next alone would likely take
+  tokens is an open question — and Gemma 4, which hit the same truncation
+  wall far more often than gpt-oss-20b did (27/30 vs. 11/30 on
+  LiveCodeBench), wasn't rerun at a larger budget either, so its real
+  ceiling is even less known than gpt-oss-20b's was before that rerun.
+  Testing it properly means rerunning all models at the larger budget,
+  which for Next alone would likely take
   hours given its 3026s runtime at the smaller budget. Not done here;
   explicitly future work, not an oversight.
 - **None of these benchmarks measure the actual target workload.** The
@@ -794,6 +876,26 @@ evaluation method — don't just report the number.
 
 </details>
 
+<details>
+<summary><b>Gemma 4 26B A4B QAT perplexity came back as 653</b> — a different bug from gpt-oss's, same conclusion: not real</summary>
+
+`llama-perplexity` reported PPL 653 for Gemma 4 — even more implausible than
+gpt-oss-20b's ~160 above, and for a model that generates fluent, coherent
+text through its normal chat interface. Checked before trusting it: this is
+a documented `llama.cpp` bug, not a setup mistake —
+[ggml-org/llama.cpp#21786](https://github.com/ggml-org/llama.cpp/issues/21786)
+— a duplicate BOS token corrupts the perplexity calculation specifically for
+this model family. Different root cause from gpt-oss's chat-template
+miscalibration above, same practical result: **not a real quality number,
+never report 653 as one.**
+
+**Lesson:** an implausible perplexity number is a reason to check upstream
+issue trackers before reporting it, not a reason to assume the model is
+simply bad — two models in this repo now have wildly-outlying perplexity for
+two completely unrelated bugs.
+
+</details>
+
 ## Troubleshooting quick reference
 
 | Symptom | Cause | Fix |
@@ -804,6 +906,7 @@ evaluation method — don't just report the number.
 | `llama-bench`/`llama-perplexity` missing, only `-impl.dll` files present | Prebuilt install only shipped the tools it uses directly | Pull matching `.exe` files from the release named in `UNSLOTH_PREBUILT_INFO.json` (or build from source, which includes everything) |
 | opencode can't call tools correctly | Chat template mismatch | Make sure `--jinja` is enabled |
 | pass@1 unexpectedly low on a reasoning model | Token budget too small — cut off mid-thought | Raise `max_tokens` significantly (see Benchmark methodology) |
+| Perplexity wildly higher than every other model tested | Model-specific known `llama.cpp` bug, not a real quality signal (seen with gpt-oss-20b and Gemma 4, two different causes) | Check upstream issue trackers before trusting the number — see Known issues |
 
 ## Files in this repo
 

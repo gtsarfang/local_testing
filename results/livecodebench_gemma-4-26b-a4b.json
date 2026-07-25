@@ -1,0 +1,253 @@
+{
+  "label": "gemma-4-26b-a4b",
+  "source": "LiveCodeBench AtCoder subset (Jan-Apr 2025, stratified 10 easy/10 medium/10 hard)",
+  "passed": 3,
+  "total": 30,
+  "pass_at_1": 0.1,
+  "wall_clock_seconds": 2721.0,
+  "generation_seconds": 2720.7,
+  "failures": [
+    "abc388_b",
+    "abc389_b",
+    "abc390_a",
+    "abc393_a",
+    "abc394_b",
+    "abc395_b",
+    "abc396_b",
+    "abc387_c",
+    "abc388_c",
+    "abc390_d",
+    "arc191_a",
+    "abc392_d",
+    "arc192_a",
+    "abc394_d",
+    "abc396_c",
+    "arc194_a",
+    "abc397_b",
+    "abc387_f",
+    "arc190_d",
+    "abc390_f",
+    "abc392_g",
+    "abc393_e",
+    "arc193_a",
+    "abc396_e",
+    "abc397_f",
+    "arc195_e",
+    "abc400_e"
+  ],
+  "results": [
+    {
+      "question_id": "abc387_b",
+      "title": "9x9 Sum",
+      "pass": true,
+      "error": "",
+      "seconds": 71.37193775177002,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc388_b",
+      "title": "Heavy Snake",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 79.3433780670166
+    },
+    {
+      "question_id": "abc389_b",
+      "title": "tcaF",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 79.1946394443512
+    },
+    {
+      "question_id": "abc390_a",
+      "title": "12435",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 79.32853746414185
+    },
+    {
+      "question_id": "abc391_a",
+      "title": "Lucky Direction",
+      "pass": true,
+      "error": "",
+      "seconds": 49.272916316986084,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc392_a",
+      "title": "Shuffled Equation",
+      "pass": true,
+      "error": "",
+      "seconds": 54.99584221839905,
+      "difficulty": "easy"
+    },
+    {
+      "question_id": "abc393_a",
+      "title": "Poisonous Oyster",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 79.15291357040405
+    },
+    {
+      "question_id": "abc394_b",
+      "title": "cat",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 79.30844759941101
+    },
+    {
+      "question_id": "abc395_b",
+      "title": "Make Target",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 79.79304718971252
+    },
+    {
+      "question_id": "abc396_b",
+      "title": "Card Pile",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 79.80410599708557
+    },
+    {
+      "question_id": "abc387_c",
+      "title": "Snake Numbers",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 80.90789341926575
+    },
+    {
+      "question_id": "abc388_c",
+      "title": "Various Kagamimochi",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 104.3697407245636
+    },
+    {
+      "question_id": "abc390_d",
+      "title": "Stone XOR",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 104.89077091217041
+    },
+    {
+      "question_id": "arc191_a",
+      "title": "Replace Digits",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 103.11974167823792
+    },
+    {
+      "question_id": "abc392_d",
+      "title": "Doubles",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 105.36950707435608
+    },
+    {
+      "question_id": "arc192_a",
+      "title": "ARC Arc",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.6138083934784
+    },
+    {
+      "question_id": "abc394_d",
+      "title": "Colorful Bracket Sequence",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.51930260658264
+    },
+    {
+      "question_id": "abc396_c",
+      "title": "Buy Balls",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.23655962944031
+    },
+    {
+      "question_id": "arc194_a",
+      "title": "Operations on a Stack",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.71610808372498
+    },
+    {
+      "question_id": "abc397_b",
+      "title": "Ticket Gate Log",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.61037087440491
+    },
+    {
+      "question_id": "abc387_f",
+      "title": "Count Arrays",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.03691291809082
+    },
+    {
+      "question_id": "arc190_d",
+      "title": "Matrix Pow Sum",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.76719069480896
+    },
+    {
+      "question_id": "abc390_f",
+      "title": "Double Sum 3",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.58213925361633
+    },
+    {
+      "question_id": "abc392_g",
+      "title": "Fine Triplets",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.11744046211243
+    },
+    {
+      "question_id": "abc393_e",
+      "title": "GCD of Subset",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 106.52100467681885
+    },
+    {
+      "question_id": "arc193_a",
+      "title": "Complement Interval Graph",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 107.20856213569641
+    },
+    {
+      "question_id": "abc396_e",
+      "title": "Min of Restricted Sum",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 95.08987426757812
+    },
+    {
+      "question_id": "abc397_f",
+      "title": "Variety Split Hard",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 74.36938548088074
+    },
+    {
+      "question_id": "arc195_e",
+      "title": "Random Tree Distance",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 74.60069227218628
+    },
+    {
+      "question_id": "abc400_e",
+      "title": "Ringo's Favorite Numbers 3",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 74.49148869514465
+    }
+  ]
+}

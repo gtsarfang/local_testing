@@ -1,0 +1,517 @@
+{
+  "label": "gemma-4-26b-a4b",
+  "offsets": [
+    0,
+    40,
+    100,
+    140
+  ],
+  "slice_size": 20,
+  "passed": 62,
+  "total": 80,
+  "pass_at_1": 0.775,
+  "wall_clock_seconds": 3447.0,
+  "generation_seconds": 3443.5,
+  "failures": [
+    "HumanEval/1",
+    "HumanEval/40",
+    "HumanEval/41",
+    "HumanEval/47",
+    "HumanEval/59",
+    "HumanEval/102",
+    "HumanEval/105",
+    "HumanEval/108",
+    "HumanEval/109",
+    "HumanEval/113",
+    "HumanEval/116",
+    "HumanEval/118",
+    "HumanEval/119",
+    "HumanEval/140",
+    "HumanEval/141",
+    "HumanEval/145",
+    "HumanEval/147",
+    "HumanEval/158"
+  ],
+  "results": [
+    {
+      "task_id": "HumanEval/0",
+      "pass": true,
+      "error": "",
+      "seconds": 21.27901792526245
+    },
+    {
+      "task_id": "HumanEval/1",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 80.01857209205627
+    },
+    {
+      "task_id": "HumanEval/2",
+      "pass": true,
+      "error": "",
+      "seconds": 49.8465940952301
+    },
+    {
+      "task_id": "HumanEval/3",
+      "pass": true,
+      "error": "",
+      "seconds": 11.650468587875366
+    },
+    {
+      "task_id": "HumanEval/4",
+      "pass": true,
+      "error": "",
+      "seconds": 28.637212991714478
+    },
+    {
+      "task_id": "HumanEval/5",
+      "pass": true,
+      "error": "",
+      "seconds": 70.56578254699707
+    },
+    {
+      "task_id": "HumanEval/6",
+      "pass": true,
+      "error": "",
+      "seconds": 29.120773792266846
+    },
+    {
+      "task_id": "HumanEval/7",
+      "pass": true,
+      "error": "",
+      "seconds": 8.230336904525757
+    },
+    {
+      "task_id": "HumanEval/8",
+      "pass": true,
+      "error": "",
+      "seconds": 13.591432094573975
+    },
+    {
+      "task_id": "HumanEval/9",
+      "pass": true,
+      "error": "",
+      "seconds": 47.12281513214111
+    },
+    {
+      "task_id": "HumanEval/10",
+      "pass": true,
+      "error": "",
+      "seconds": 70.28879141807556
+    },
+    {
+      "task_id": "HumanEval/11",
+      "pass": true,
+      "error": "",
+      "seconds": 22.004449129104614
+    },
+    {
+      "task_id": "HumanEval/12",
+      "pass": true,
+      "error": "",
+      "seconds": 21.588071823120117
+    },
+    {
+      "task_id": "HumanEval/13",
+      "pass": true,
+      "error": "",
+      "seconds": 11.19153356552124
+    },
+    {
+      "task_id": "HumanEval/14",
+      "pass": true,
+      "error": "",
+      "seconds": 11.197955131530762
+    },
+    {
+      "task_id": "HumanEval/15",
+      "pass": true,
+      "error": "",
+      "seconds": 9.155004024505615
+    },
+    {
+      "task_id": "HumanEval/16",
+      "pass": true,
+      "error": "",
+      "seconds": 9.081913709640503
+    },
+    {
+      "task_id": "HumanEval/17",
+      "pass": true,
+      "error": "",
+      "seconds": 24.49004316329956
+    },
+    {
+      "task_id": "HumanEval/18",
+      "pass": true,
+      "error": "",
+      "seconds": 38.28277349472046
+    },
+    {
+      "task_id": "HumanEval/19",
+      "pass": true,
+      "error": "",
+      "seconds": 12.839436769485474
+    },
+    {
+      "task_id": "HumanEval/40",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 77.84192037582397
+    },
+    {
+      "task_id": "HumanEval/41",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 77.26226305961609
+    },
+    {
+      "task_id": "HumanEval/42",
+      "pass": true,
+      "error": "",
+      "seconds": 9.586627960205078
+    },
+    {
+      "task_id": "HumanEval/43",
+      "pass": true,
+      "error": "",
+      "seconds": 34.54712438583374
+    },
+    {
+      "task_id": "HumanEval/44",
+      "pass": true,
+      "error": "",
+      "seconds": 54.96782827377319
+    },
+    {
+      "task_id": "HumanEval/45",
+      "pass": true,
+      "error": "",
+      "seconds": 5.083300352096558
+    },
+    {
+      "task_id": "HumanEval/46",
+      "pass": true,
+      "error": "",
+      "seconds": 69.22116565704346
+    },
+    {
+      "task_id": "HumanEval/47",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 73.88535189628601
+    },
+    {
+      "task_id": "HumanEval/48",
+      "pass": true,
+      "error": "",
+      "seconds": 7.224249601364136
+    },
+    {
+      "task_id": "HumanEval/49",
+      "pass": true,
+      "error": "",
+      "seconds": 14.812483787536621
+    },
+    {
+      "task_id": "HumanEval/50",
+      "pass": true,
+      "error": "",
+      "seconds": 16.55316472053528
+    },
+    {
+      "task_id": "HumanEval/51",
+      "pass": true,
+      "error": "",
+      "seconds": 12.958086013793945
+    },
+    {
+      "task_id": "HumanEval/52",
+      "pass": true,
+      "error": "",
+      "seconds": 8.531991481781006
+    },
+    {
+      "task_id": "HumanEval/53",
+      "pass": true,
+      "error": "",
+      "seconds": 6.0400025844573975
+    },
+    {
+      "task_id": "HumanEval/54",
+      "pass": true,
+      "error": "",
+      "seconds": 26.98766589164734
+    },
+    {
+      "task_id": "HumanEval/55",
+      "pass": true,
+      "error": "",
+      "seconds": 39.06572484970093
+    },
+    {
+      "task_id": "HumanEval/56",
+      "pass": true,
+      "error": "",
+      "seconds": 13.88170051574707
+    },
+    {
+      "task_id": "HumanEval/57",
+      "pass": true,
+      "error": "",
+      "seconds": 26.158536672592163
+    },
+    {
+      "task_id": "HumanEval/58",
+      "pass": true,
+      "error": "",
+      "seconds": 17.407813549041748
+    },
+    {
+      "task_id": "HumanEval/59",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 77.1823832988739
+    },
+    {
+      "task_id": "HumanEval/100",
+      "pass": true,
+      "error": "",
+      "seconds": 48.63099217414856
+    },
+    {
+      "task_id": "HumanEval/101",
+      "pass": true,
+      "error": "",
+      "seconds": 38.65178370475769
+    },
+    {
+      "task_id": "HumanEval/102",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 77.16274976730347
+    },
+    {
+      "task_id": "HumanEval/103",
+      "pass": true,
+      "error": "",
+      "seconds": 55.844318151474
+    },
+    {
+      "task_id": "HumanEval/104",
+      "pass": true,
+      "error": "",
+      "seconds": 70.61643433570862
+    },
+    {
+      "task_id": "HumanEval/105",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 77.69129800796509
+    },
+    {
+      "task_id": "HumanEval/106",
+      "pass": true,
+      "error": "",
+      "seconds": 59.69448375701904
+    },
+    {
+      "task_id": "HumanEval/107",
+      "pass": true,
+      "error": "",
+      "seconds": 71.84932088851929
+    },
+    {
+      "task_id": "HumanEval/108",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 76.7360405921936
+    },
+    {
+      "task_id": "HumanEval/109",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 76.80816793441772
+    },
+    {
+      "task_id": "HumanEval/110",
+      "pass": true,
+      "error": "",
+      "seconds": 56.41104602813721
+    },
+    {
+      "task_id": "HumanEval/111",
+      "pass": true,
+      "error": "",
+      "seconds": 35.82512307167053
+    },
+    {
+      "task_id": "HumanEval/112",
+      "pass": true,
+      "error": "",
+      "seconds": 22.436009407043457
+    },
+    {
+      "task_id": "HumanEval/113",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 76.73583793640137
+    },
+    {
+      "task_id": "HumanEval/114",
+      "pass": true,
+      "error": "",
+      "seconds": 44.837220668792725
+    },
+    {
+      "task_id": "HumanEval/115",
+      "pass": true,
+      "error": "",
+      "seconds": 73.6913902759552
+    },
+    {
+      "task_id": "HumanEval/116",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 76.58066368103027
+    },
+    {
+      "task_id": "HumanEval/117",
+      "pass": true,
+      "error": "",
+      "seconds": 60.46708822250366
+    },
+    {
+      "task_id": "HumanEval/118",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 76.66931700706482
+    },
+    {
+      "task_id": "HumanEval/119",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 76.68307089805603
+    },
+    {
+      "task_id": "HumanEval/140",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 76.67387008666992
+    },
+    {
+      "task_id": "HumanEval/141",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 76.73903465270996
+    },
+    {
+      "task_id": "HumanEval/142",
+      "pass": true,
+      "error": "",
+      "seconds": 50.720186710357666
+    },
+    {
+      "task_id": "HumanEval/143",
+      "pass": true,
+      "error": "",
+      "seconds": 29.157095909118652
+    },
+    {
+      "task_id": "HumanEval/144",
+      "pass": true,
+      "error": "",
+      "seconds": 19.697941064834595
+    },
+    {
+      "task_id": "HumanEval/145",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 76.6073362827301
+    },
+    {
+      "task_id": "HumanEval/146",
+      "pass": true,
+      "error": "",
+      "seconds": 56.83304762840271
+    },
+    {
+      "task_id": "HumanEval/147",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 81.85785388946533
+    },
+    {
+      "task_id": "HumanEval/148",
+      "pass": true,
+      "error": "",
+      "seconds": 26.60111427307129
+    },
+    {
+      "task_id": "HumanEval/149",
+      "pass": true,
+      "error": "",
+      "seconds": 24.733476638793945
+    },
+    {
+      "task_id": "HumanEval/150",
+      "pass": true,
+      "error": "",
+      "seconds": 14.554311275482178
+    },
+    {
+      "task_id": "HumanEval/151",
+      "pass": true,
+      "error": "",
+      "seconds": 77.47352647781372
+    },
+    {
+      "task_id": "HumanEval/152",
+      "pass": true,
+      "error": "",
+      "seconds": 16.837456941604614
+    },
+    {
+      "task_id": "HumanEval/153",
+      "pass": true,
+      "error": "",
+      "seconds": 68.3766462802887
+    },
+    {
+      "task_id": "HumanEval/154",
+      "pass": true,
+      "error": "",
+      "seconds": 46.33207821846008
+    },
+    {
+      "task_id": "HumanEval/155",
+      "pass": true,
+      "error": "",
+      "seconds": 14.98918080329895
+    },
+    {
+      "task_id": "HumanEval/156",
+      "pass": true,
+      "error": "",
+      "seconds": 44.84301257133484
+    },
+    {
+      "task_id": "HumanEval/157",
+      "pass": true,
+      "error": "",
+      "seconds": 13.17595362663269
+    },
+    {
+      "task_id": "HumanEval/158",
+      "pass": false,
+      "error": "empty response (truncated mid-reasoning?)",
+      "seconds": 77.85556173324585
+    },
+    {
+      "task_id": "HumanEval/159",
+      "pass": true,
+      "error": "",
+      "seconds": 36.02567481994629
+    }
+  ]
+}
